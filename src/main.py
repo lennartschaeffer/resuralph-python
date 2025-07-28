@@ -1,5 +1,4 @@
 import os
-import sys
 import logging
 from flask import Flask, jsonify, request
 from mangum import Mangum
@@ -8,24 +7,22 @@ from discord_interactions import verify_key_decorator
 from dotenv import load_dotenv
 from commands.upload import handle_upload_command
 
-
-# logging
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
+# Load environment variables
 load_dotenv()
-
-# Add src directory to Python path so we can import our modules
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
 
 app = Flask(__name__)
 asgi_app = WsgiToAsgi(app)
 handler = Mangum(asgi_app)
+
 
 @app.route("/", methods=["POST"])
 async def interactions():
