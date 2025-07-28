@@ -1,0 +1,9 @@
+flask
+mangum
+asgiref
+discord-interactions
+boto3
+pypdf
+requests
+python-dotenv
+PyPDF2

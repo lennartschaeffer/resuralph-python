@@ -1,0 +1,42 @@
+- name: upload
+  description: Upload your resume for review by other members
+  options:
+    - name: file
+      description: Upload your resume as a PDF
+      type: attachment
+      required: true
+
+- name: get_annotations
+  description: Get the annotations made on your resume
+  options:
+    - name: pdf_url
+      description: Right click on the latest resume link sent by ResuRalph and click Copy Link.
+      type: string
+      required: true
+
+- name: update
+  description: Update your current resume and see the changes
+  options:
+    - name: file
+      description: Upload your resume as a PDF
+      type: attachment
+      required: true
+    - name: show_diff
+      description: Show differences between the latest uploaded resume and the previous one
+      type: boolean
+      required: false
+
+- name: get_latest_resume
+  description: Retrieve the link to your latest uploaded resume
+
+- name: get_resume_diff
+  description: Get the differences between two resumes
+  options:
+    - name: old_resume_url
+      description: The hypothes.is URL of the old resume
+      type: string
+      required: true
+    - name: new_resume_url
+      description: The hypothes.is URL of the new resume
+      type: string
+      required: true
