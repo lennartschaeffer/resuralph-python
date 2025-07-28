@@ -6,6 +6,7 @@ from asgiref.wsgi import WsgiToAsgi
 from discord_interactions import verify_key_decorator
 from dotenv import load_dotenv
 from commands.upload import handle_upload_command
+from commands.get_latest_resume import handle_get_latest_resume_command
 
 # Configure logging
 logging.basicConfig(
@@ -48,7 +49,7 @@ def interact(raw_request):
                 original_message = data["options"][0]["value"]
                 message_content = f"Echoing: {original_message}"
             elif command_name == "get_latest_resume":
-                message_content = "Getting your latest resume..."
+                message_content = handle_get_latest_resume_command(raw_request)
             elif command_name == "upload":
                 message_content = handle_upload_command(raw_request)
             elif command_name == "get_annotations":
