@@ -1,7 +1,6 @@
 import requests
 import logging
 import threading
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -101,8 +100,8 @@ def start_async_update_command(interaction_data):
             target=process_update_command_async,
             args=(interaction_data, application_id, interaction_token)
         )
-        thread.daemon = True
-        thread.start()
+        thread.daemon = True # Make sure thread exits when main program does
+        thread.start() 
         
         logger.info("Started async thread for update command processing")
         
