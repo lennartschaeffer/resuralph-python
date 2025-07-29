@@ -9,6 +9,7 @@ from commands.upload import handle_upload_command
 from commands.get_latest_resume import handle_get_latest_resume_command
 from commands.update import handle_update_command
 from commands.clear_resumes import handle_clear_resumes_command
+from commands.get_annotations import handle_get_annotations_command
 from helpers.discord_followup import start_async_update_command
 
 # logging
@@ -54,7 +55,7 @@ def interact(raw_request):
             elif command_name == "upload":
                 message_content = handle_upload_command(raw_request)
             elif command_name == "get_annotations":
-                message_content = "Getting annotations for your resume..."
+                message_content = handle_get_annotations_command(raw_request)
             elif command_name == "update":
                 # Use deferred response for potentially long-running update operations
                 response_data = start_async_update_command(raw_request)
