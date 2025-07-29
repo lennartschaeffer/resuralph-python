@@ -10,6 +10,7 @@ from commands.get_latest_resume import handle_get_latest_resume_command
 from commands.update import handle_update_command
 from commands.clear_resumes import handle_clear_resumes_command
 from commands.get_annotations import handle_get_annotations_command
+from commands.get_resume_diff import handle_get_resume_diff_command
 from helpers.discord_followup import start_async_update_command
 from helpers.embed_helper import create_success_embed, create_error_embed, create_info_embed
 
@@ -68,17 +69,13 @@ def handle_command_routing(command_name, raw_request):
         "upload": handle_upload_command,
         "get_annotations": handle_get_annotations_command,
         "clear_resumes": handle_clear_resumes_command,
+        "get_resume_diff": handle_get_resume_diff_command,
     }
     
     if command_name in command_handlers:
         return command_handlers[command_name](raw_request)
     elif command_name == "update": # update needs special handling
         return start_async_update_command(raw_request)
-    elif command_name == "get_resume_diff": # not implemented yet
-        return create_info_embed(
-            "Not Implemented",
-            "Get resume diff has not been implemented yet. Please check back later."
-        )
     else:
         logger.warning(f"Unimplemented command: {command_name}")
         return create_error_embed(
