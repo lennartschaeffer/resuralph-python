@@ -11,6 +11,7 @@ from commands.update import handle_update_command
 from commands.clear_resumes import handle_clear_resumes_command
 from commands.get_annotations import handle_get_annotations_command
 from commands.get_resume_diff import handle_get_resume_diff_command
+from commands.get_all_resumes import handle_get_all_resumes_command
 from helpers.discord_followup import start_async_update_command
 from helpers.embed_helper import create_success_embed, create_error_embed, create_info_embed
 
@@ -70,6 +71,7 @@ def handle_command_routing(command_name, raw_request):
         "get_annotations": handle_get_annotations_command,
         "clear_resumes": handle_clear_resumes_command,
         "get_resume_diff": handle_get_resume_diff_command,
+        "get_all_resumes": handle_get_all_resumes_command,
     }
     
     if command_name in command_handlers:

@@ -49,3 +49,7 @@
 - name: clear_resumes
   type: 1
   description: Clear all your uploaded resumes from the system (PERMANENT)
+
+- name: get_all_resumes
+  type: 1
+  description: Retrieve links to all your uploaded resume versions
