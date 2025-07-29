@@ -1,14 +1,29 @@
-# Welcome to your CDK TypeScript project
+# **ResuRalph 🤖📄**
 
-This is a blank project for CDK development with TypeScript.
+### A Discord bot for collaborative resume feedback
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+In today's competitive tech job market, a standout resume is the first step toward success. However, the resume review process can often be cumbersome.
 
-## Useful commands
+- Long, overwhelming review threads, where comments can easily get buried and overlooked.
+- Reviewers forced to download PDFs to view resume's and updated resume's, which becomes increasingly tedious with each incremental change.
+- The frustration of manually identifying and specifying which parts of the resume you're referring to.
+- Comparing two resume PDF's and trying to identify what changes were made by the user.
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+---
+
+**ResuRalph streamlines this process.**
+
+---
+
+## **The Flow** ⏳
+
+- Upload your resume as a PDF using the **/upload** command.
+- ResuRalph integrates with [**Hypothes.is**](https://hypothes.is/), generating a link for reviewers to leave **in-line** annotations on your resume.
+- Users can click on the link to view comments left by reviewers, or use the **/get_annotations** command to pull the annotations directly into Discord.
+- Once the user has made the appropriate changes, they can use the **/update** command to upload their newly updated resume.
+
+- When using **/update**, the optional **diff** subcommand allows users to pull the changes between their latest two resume's into discord, in a format that shows  
+  🟢Added: "Project X | React, Node, SQL..."  
+  🔴Removed: "Work Experience Y | Example Company..."
+
+---
