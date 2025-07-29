@@ -84,33 +84,3 @@ def validate_pdf(attachment_info):
         raise PDFValidationError(f"Unexpected error during validation: {str(e)}")
 
 
-def get_pdf_info(file_bytes):
-    """
-    Extract basic information from a PDF file
-    
-    Args:
-        file_bytes (bytes): PDF file content
-        
-    Returns:
-        dict: PDF information including page count, title, etc.
-    """
-    try:
-        pdf_stream = BytesIO(file_bytes)
-        pdf_reader = PyPDF2.PdfReader(pdf_stream)
-        
-        info = {
-            'page_count': len(pdf_reader.pages),
-            'encrypted': pdf_reader.is_encrypted,
-        }
-        
-        # Try to get metadata
-        if pdf_reader.metadata:
-            info['title'] = pdf_reader.metadata.get('/Title', '')
-            info['author'] = pdf_reader.metadata.get('/Author', '')
-            info['creator'] = pdf_reader.metadata.get('/Creator', '')
-        
-        return info
-        
-    except Exception as e:
-        print(f"Error extracting PDF info: {e}")
-        return {'page_count': 0, 'encrypted': False}

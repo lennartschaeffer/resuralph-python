@@ -8,14 +8,13 @@ from dotenv import load_dotenv
 from commands.upload import handle_upload_command
 from commands.get_latest_resume import handle_get_latest_resume_command
 
-# Configure logging
+# logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Load environment variables
 load_dotenv()
 
 DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
@@ -23,7 +22,6 @@ DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
 app = Flask(__name__)
 asgi_app = WsgiToAsgi(app)
 handler = Mangum(asgi_app)
-
 
 @app.route("/", methods=["POST"])
 async def interactions():
