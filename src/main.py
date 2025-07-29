@@ -37,91 +37,18 @@ async def interactions():
 @verify_key_decorator(DISCORD_PUBLIC_KEY)
 def interact(raw_request):
     try:
-        if raw_request["type"] == 1:  # discord health check
+        if raw_request["type"] == 1:
             logger.info("Discord health check received")
-            response_data = {"type": 1} 
-        else:
-            data = raw_request["data"]
-            command_name = data["name"]
-            user_id = raw_request.get('member', {}).get('user', {}).get('id', 'unknown')
-            logger.info(f"Processing command '{command_name}' for user {user_id}")
-
-            if command_name == "hello":
-                message_content = create_info_embed(
-                    "Hello!",
-                    "Hello there! I'm ResuRalph, your resume review assistant. 👋"
-                )
-            elif command_name == "echo":
-                original_message = data["options"][0]["value"]
-                message_content = create_info_embed(
-                    "Echo Response",
-                    f"Echoing: {original_message}"
-                )
-            elif command_name == "get_latest_resume":
-                message_content = handle_get_latest_resume_command(raw_request)
-            elif command_name == "upload":
-                message_content = handle_upload_command(raw_request)
-            elif command_name == "get_annotations":
-                response_data_content = handle_get_annotations_command(raw_request)
-            elif command_name == "update":
-                # Use deferred response for potentially long-running update operations
-                response_data = start_async_update_command(raw_request)
-            elif command_name == "get_resume_diff":
-                message_content = create_info_embed(
-                    "Processing",
-                    "Getting resume differences..."
-                )
-            elif command_name == "clear_resumes":
-                message_content = handle_clear_resumes_command(raw_request)
-            else:
-                message_content = create_error_embed(
-                    "Command Not Found",
-                    f"Command '{command_name}' is not implemented yet."
-                )
-                logger.warning(f"Unimplemented command: {command_name}")
-
-            # Handle non-update commands with standard response format
-            if command_name != "update":
-                if command_name == "get_annotations":
-                    # get_annotations can return either embeds or plain text content
-                    if isinstance(response_data_content, dict) and "embeds" in response_data_content:
-                        response_data = {
-                            "type": 4,
-                            "data": response_data_content,
-                        }
-                    else:
-                        response_data = {
-                            "type": 4,
-                            "data": {"content": response_data_content},
-                        }
-                else:
-                    # All other commands now return embed format
-                    if isinstance(message_content, dict) and "embeds" in message_content:
-                        response_data = {
-                            "type": 4,
-                            "data": message_content,
-                        }
-                    else:
-                        # Fallback for any plain text responses
-                        response_data = {
-                            "type": 4,
-                            "data": {"content": message_content},
-                        }
-            
-            if command_name == "update":
-                logger.info(f"Sending deferred response for command '{command_name}'")
-            else:
-                if command_name == "get_annotations":
-                    if isinstance(response_data_content, dict):
-                        logger.info(f"Sending embed response for command '{command_name}'")
-                    else:
-                        logger.info(f"Sending response for command '{command_name}': {len(response_data_content)} characters")
-                else:
-                    if isinstance(message_content, dict):
-                        logger.info(f"Sending embed response for command '{command_name}'")
-                    else:
-                        logger.info(f"Sending response for command '{command_name}'")
-
+            return jsonify({"type": 1})
+        
+        data = raw_request["data"]
+        command_name = data["name"]
+        user_id = raw_request.get('member', {}).get('user', {}).get('id', 'unknown')
+        logger.info(f"Processing command '{command_name}' for user {user_id}")
+        
+        response_content = handle_command_routing(command_name, raw_request)
+        response_data = format_command_response(command_name, response_content)
+        
         return jsonify(response_data)
     
     except Exception as e:
@@ -135,6 +62,38 @@ def interact(raw_request):
             "data": error_embed,
         })
 
+def handle_command_routing(command_name, raw_request):
+    command_handlers = {
+        "get_latest_resume": handle_get_latest_resume_command,
+        "upload": handle_upload_command,
+        "get_annotations": handle_get_annotations_command,
+        "clear_resumes": handle_clear_resumes_command,
+    }
+    
+    if command_name in command_handlers:
+        return command_handlers[command_name](raw_request)
+    elif command_name == "update": # update needs special handling
+        return start_async_update_command(raw_request)
+    elif command_name == "get_resume_diff": # not implemented yet
+        return create_info_embed(
+            "Not Implemented",
+            "Get resume diff has not been implemented yet. Please check back later."
+        )
+    else:
+        logger.warning(f"Unimplemented command: {command_name}")
+        return create_error_embed(
+            "Command Not Found",
+            f"Command '{command_name}' is not implemented yet."
+        )
+
+def format_command_response(command_name, response_content):
+    if command_name == "update":
+        return response_content # deferred response already handled in async processing
+
+    if isinstance(response_content, dict) and "embeds" in response_content:
+        return {"type": 4, "data": response_content}
+    else:
+        return {"type": 4, "data": {"content": response_content}}
 
 if __name__ == "__main__":
     app.run(debug=True, port=8000)
