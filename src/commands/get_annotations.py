@@ -81,27 +81,44 @@ def get_annotations_from_hypothesis(pdf_url):
 
 def format_annotations(annotations, user_id):
     """
-    Format annotations into Discord message content
+    Format annotations into Discord embed format
     
     Args:
         annotations (dict): Annotations data from Hypothesis
         user_id (str): Discord user ID for logging
         
     Returns:
-        str: Formatted message for Discord
+        dict: Discord response data with embeds
     """
     try:
         # Check if there are no annotations
         if annotations.get('total', 0) == 0:
-            return "📝 **No Annotations Yet!**\nNo annotations were currently found for this resume."
+            embed = {
+                "color": 0xffff00,  # Yellow color
+                "title": "📝 No Annotations Yet!",
+                "description": "No annotations were currently found for this resume.",
+                "footer": {
+                    "text": "🤖 ResuRalph by @Lenny"
+                }
+            }
+            return {"embeds": [embed]}
         
-        # Build the response message
-        message_parts = ["📝 **Resume Feedback**\nHere are the annotations for your resume:\n"]
+        # Create primary embed
+        embed = {
+            "color": 0x0099ff,  # Blue color
+            "title": "📝 Resume Feedback",
+            "description": "Here are the annotations for your resume:",
+            "footer": {
+                "text": "🤖 ResuRalph by @Lenny"
+            },
+            "fields": []
+        }
         
         annotations_list = annotations.get('rows', [])
         fields_added = 0
         max_fields = 25  # Discord embed limit
         
+        # Add fields to primary embed
         for annotation in annotations_list:
             if fields_added >= max_fields:
                 break
@@ -121,19 +138,44 @@ def format_annotations(annotations, user_id):
             annotation_text = annotation.get('text', '')
             user_name = annotation.get('user', '').replace('acct:', '').replace('@hypothes.is', '')
             
-            field_content = f"📄 *{resume_text}*\n💭 {annotation_text}\n👤 by {user_name}\n──────────────\n"
-            message_parts.append(field_content)
+            field = {
+                "name": f"📄 *{resume_text}*",
+                "value": f"💭 {annotation_text}\n👤 by {user_name}\n──────────────",
+                "inline": False
+            }
+            
+            embed["fields"].append(field)
             fields_added += 1
+        
+        embeds = [embed]
         
         # Handle additional annotations if there are more than 25
         if annotations.get('total', 0) > max_fields:
             remaining_count = annotations.get('total', 0) - max_fields
+            remaining_annotations = annotations_list[fields_added:]
+            
             if remaining_count > 25:
-                message_parts.append(f"\n⚠️ **Note:** There are {remaining_count} more annotations! Please check the Hypothesis link for complete details.")
+                # Too many annotations, show warning
+                warning_embed = {
+                    "color": 0xff9900,  # Orange color for warning
+                    "title": "⚠️ Additional Annotations",
+                    "description": f"There are {remaining_count} more annotations! Please check the Hypothesis link for complete details.",
+                    "footer": {
+                        "text": "🤖 ResuRalph by @Lenny"
+                    }
+                }
+                embeds.append(warning_embed)
             else:
-                # Add remaining annotations
-                remaining_annotations = annotations_list[fields_added:]
-                message_parts.append("\n📝 **Feedback Cont'd**\nAdditional annotations for your resume:\n")
+                # Create secondary embed for remaining annotations
+                secondary_embed = {
+                    "color": 0x0099ff,  # Blue color
+                    "title": "📝 Feedback Cont'd",
+                    "description": "Additional annotations for your resume:",
+                    "footer": {
+                        "text": "🤖 ResuRalph by @Lenny"
+                    },
+                    "fields": []
+                }
                 
                 for annotation in remaining_annotations:
                     # Extract resume text
@@ -151,19 +193,18 @@ def format_annotations(annotations, user_id):
                     annotation_text = annotation.get('text', '')
                     user_name = annotation.get('user', '').replace('acct:', '').replace('@hypothes.is', '')
                     
-                    field_content = f"📄 *{resume_text}*\n💭 {annotation_text}\n👤 by {user_name}\n──────────────\n"
-                    message_parts.append(field_content)
+                    field = {
+                        "name": f"📄 *{resume_text}*",
+                        "value": f"💭 {annotation_text}\n👤 by {user_name}\n──────────────",
+                        "inline": False
+                    }
+                    
+                    secondary_embed["fields"].append(field)
+                
+                embeds.append(secondary_embed)
         
-        message_parts.append("\n🤖 ResuRalph by @Lenny")
-        
-        final_message = "".join(message_parts)
-        
-        # Discord has a 2000 character limit for messages
-        if len(final_message) > 2000:
-            final_message = final_message[:1900] + "...\n\n⚠️ Message truncated due to length. Check the Hypothesis link for complete annotations."
-        
-        logger.info(f"Formatted {fields_added} annotations for user {user_id}")
-        return final_message
+        logger.info(f"Formatted {fields_added} annotations into {len(embeds)} embed(s) for user {user_id}")
+        return {"embeds": embeds}
         
     except Exception as e:
         logger.error(f"Error formatting annotations: {str(e)}")

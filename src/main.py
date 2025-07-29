@@ -55,7 +55,7 @@ def interact(raw_request):
             elif command_name == "upload":
                 message_content = handle_upload_command(raw_request)
             elif command_name == "get_annotations":
-                message_content = handle_get_annotations_command(raw_request)
+                response_data_content = handle_get_annotations_command(raw_request)
             elif command_name == "update":
                 # Use deferred response for potentially long-running update operations
                 response_data = start_async_update_command(raw_request)
@@ -69,15 +69,34 @@ def interact(raw_request):
 
             # Handle non-update commands with standard response format
             if command_name != "update":
-                response_data = {
-                    "type": 4,
-                    "data": {"content": message_content},
-                }
+                if command_name == "get_annotations":
+                    # get_annotations can return either embeds or plain text content
+                    if isinstance(response_data_content, dict) and "embeds" in response_data_content:
+                        response_data = {
+                            "type": 4,
+                            "data": response_data_content,
+                        }
+                    else:
+                        response_data = {
+                            "type": 4,
+                            "data": {"content": response_data_content},
+                        }
+                else:
+                    response_data = {
+                        "type": 4,
+                        "data": {"content": message_content},
+                    }
             
             if command_name == "update":
                 logger.info(f"Sending deferred response for command '{command_name}'")
             else:
-                logger.info(f"Sending response for command '{command_name}': {len(message_content)} characters")
+                if command_name == "get_annotations":
+                    if isinstance(response_data_content, dict):
+                        logger.info(f"Sending embed response for command '{command_name}'")
+                    else:
+                        logger.info(f"Sending response for command '{command_name}': {len(response_data_content)} characters")
+                else:
+                    logger.info(f"Sending response for command '{command_name}': {len(message_content)} characters")
 
         return jsonify(response_data)
     
