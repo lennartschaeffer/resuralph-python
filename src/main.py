@@ -11,6 +11,7 @@ from commands.update import handle_update_command
 from commands.clear_resumes import handle_clear_resumes_command
 from commands.get_annotations import handle_get_annotations_command
 from helpers.discord_followup import start_async_update_command
+from helpers.embed_helper import create_success_embed, create_error_embed, create_info_embed
 
 # logging
 logging.basicConfig(
@@ -46,10 +47,16 @@ def interact(raw_request):
             logger.info(f"Processing command '{command_name}' for user {user_id}")
 
             if command_name == "hello":
-                message_content = "Hello there!"
+                message_content = create_info_embed(
+                    "Hello!",
+                    "Hello there! I'm ResuRalph, your resume review assistant. 👋"
+                )
             elif command_name == "echo":
                 original_message = data["options"][0]["value"]
-                message_content = f"Echoing: {original_message}"
+                message_content = create_info_embed(
+                    "Echo Response",
+                    f"Echoing: {original_message}"
+                )
             elif command_name == "get_latest_resume":
                 message_content = handle_get_latest_resume_command(raw_request)
             elif command_name == "upload":
@@ -60,11 +67,17 @@ def interact(raw_request):
                 # Use deferred response for potentially long-running update operations
                 response_data = start_async_update_command(raw_request)
             elif command_name == "get_resume_diff":
-                message_content = "Getting resume differences..."
+                message_content = create_info_embed(
+                    "Processing",
+                    "Getting resume differences..."
+                )
             elif command_name == "clear_resumes":
                 message_content = handle_clear_resumes_command(raw_request)
             else:
-                message_content = f"Command '{command_name}' is not implemented yet."
+                message_content = create_error_embed(
+                    "Command Not Found",
+                    f"Command '{command_name}' is not implemented yet."
+                )
                 logger.warning(f"Unimplemented command: {command_name}")
 
             # Handle non-update commands with standard response format
@@ -82,10 +95,18 @@ def interact(raw_request):
                             "data": {"content": response_data_content},
                         }
                 else:
-                    response_data = {
-                        "type": 4,
-                        "data": {"content": message_content},
-                    }
+                    # All other commands now return embed format
+                    if isinstance(message_content, dict) and "embeds" in message_content:
+                        response_data = {
+                            "type": 4,
+                            "data": message_content,
+                        }
+                    else:
+                        # Fallback for any plain text responses
+                        response_data = {
+                            "type": 4,
+                            "data": {"content": message_content},
+                        }
             
             if command_name == "update":
                 logger.info(f"Sending deferred response for command '{command_name}'")
@@ -96,15 +117,22 @@ def interact(raw_request):
                     else:
                         logger.info(f"Sending response for command '{command_name}': {len(response_data_content)} characters")
                 else:
-                    logger.info(f"Sending response for command '{command_name}': {len(message_content)} characters")
+                    if isinstance(message_content, dict):
+                        logger.info(f"Sending embed response for command '{command_name}'")
+                    else:
+                        logger.info(f"Sending response for command '{command_name}'")
 
         return jsonify(response_data)
     
     except Exception as e:
         logger.error(f"Error processing Discord interaction: {str(e)}")
+        error_embed = create_error_embed(
+            "Processing Error",
+            "An error occurred while processing your request. 😔"
+        )
         return jsonify({
             "type": 4,
-            "data": {"content": "An error occurred while processing your request. 😔"},
+            "data": error_embed,
         })
 
 

@@ -2,6 +2,7 @@ import os
 import logging
 import requests
 from urllib.parse import quote
+from helpers.embed_helper import create_error_embed, create_info_embed
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,10 @@ def handle_get_annotations_command(interaction_data):
         user_id = interaction_data.get('member', {}).get('user', {}).get('id')
         if not user_id:
             logger.error("Could not extract user ID from interaction data")
-            return "An error occurred while processing your request. 😔"
+            return create_error_embed(
+                "Processing Error",
+                "An error occurred while processing your request. 😔"
+            )
         
         # Extract pdf_url from command options
         options = interaction_data.get('data', {}).get('options', [])
@@ -32,21 +36,30 @@ def handle_get_annotations_command(interaction_data):
         
         if not pdf_url:
             logger.error(f"No pdf_url provided for user {user_id}")
-            return "Please provide a PDF URL to get annotations."
+            return create_error_embed(
+                "Missing PDF URL",
+                "Please provide a PDF URL to get annotations."
+            )
         
         logger.info(f"Getting annotations for user {user_id} with URL: {pdf_url}")
         
         # Get annotations from Hypothesis
         annotations = get_annotations_from_hypothesis(pdf_url)
         if not annotations:
-            return "An error occurred on Hypothes.is's end. Please try again later or visit the link instead to see annotations 😔"
+            return create_error_embed(
+                "Hypothesis API Error",
+                "An error occurred on Hypothes.is's end. Please try again later or visit the link instead to see annotations 😔"
+            )
         
         # Format and return annotations
         return format_annotations(annotations, user_id)
         
     except Exception as e:
         logger.error(f"Error in get_annotations command: {str(e)}")
-        return "An error occurred while getting annotations. 😔"
+        return create_error_embed(
+            "Annotation Error",
+            "An error occurred while getting annotations. 😔"
+        )
 
 
 def get_annotations_from_hypothesis(pdf_url):
@@ -208,4 +221,7 @@ def format_annotations(annotations, user_id):
         
     except Exception as e:
         logger.error(f"Error formatting annotations: {str(e)}")
-        return "An error occurred while formatting annotations. 😔"
+        return create_error_embed(
+            "Formatting Error",
+            "An error occurred while formatting annotations. 😔"
+        )
