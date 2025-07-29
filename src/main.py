@@ -7,6 +7,8 @@ from discord_interactions import verify_key_decorator
 from dotenv import load_dotenv
 from commands.upload import handle_upload_command
 from commands.get_latest_resume import handle_get_latest_resume_command
+from commands.update import handle_update_command
+from helpers.discord_followup import start_async_update_command
 
 # logging
 logging.basicConfig(
@@ -53,19 +55,25 @@ def interact(raw_request):
             elif command_name == "get_annotations":
                 message_content = "Getting annotations for your resume..."
             elif command_name == "update":
-                message_content = "Resume updated successfully!"
+                # Use deferred response for potentially long-running update operations
+                response_data = start_async_update_command(raw_request)
             elif command_name == "get_resume_diff":
                 message_content = "Getting resume differences..."
             else:
                 message_content = f"Command '{command_name}' is not implemented yet."
                 logger.warning(f"Unimplemented command: {command_name}")
 
-            response_data = {
-                "type": 4,
-                "data": {"content": message_content},
-            }
+            # Handle non-update commands with standard response format
+            if command_name != "update":
+                response_data = {
+                    "type": 4,
+                    "data": {"content": message_content},
+                }
             
-            logger.info(f"Sending response for command '{command_name}': {len(message_content)} characters")
+            if command_name == "update":
+                logger.info(f"Sending deferred response for command '{command_name}'")
+            else:
+                logger.info(f"Sending response for command '{command_name}': {len(message_content)} characters")
 
         return jsonify(response_data)
     

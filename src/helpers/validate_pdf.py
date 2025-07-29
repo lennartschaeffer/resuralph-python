@@ -1,12 +1,44 @@
 import requests
 import PyPDF2
 from io import BytesIO
+import logging
+from models.resume import DiscordAttachment
 
+
+logger = logging.getLogger(__name__)
 
 class PDFValidationError(Exception):
-    """Custom exception for PDF validation errors"""
+    """Custom exception for PDF validation errors."""
     pass
 
+def validate_attachment_data(interaction_data, user_id):
+    data = interaction_data['data']
+    
+    if 'resolved' not in data or 'attachments' not in data['resolved']:
+        logger.warning(f"No attachment found in request for user {user_id}")
+        return None, "No file attachment found. Please attach a PDF file."
+    
+    attachment_id = None
+    if 'options' in data:
+        for option in data['options']:
+            if option['name'] == 'file':
+                attachment_id = option['value']
+                break
+    
+    if not attachment_id:
+        logger.warning(f"No attachment ID found in options for user {user_id}")
+        return None, "No file attachment found in command options."
+    
+    attachments = data['resolved']['attachments']
+    if attachment_id not in attachments:
+        logger.error(f"Attachment {attachment_id} not found in resolved data for user {user_id}")
+        return None, "Attachment not found in resolved data."
+    
+    attachment_data = attachments[attachment_id]
+    attachment = DiscordAttachment.from_discord_data(attachment_data)
+    logger.info(f"Processing attachment: {attachment.filename} ({attachment.size_mb():.1f}MB) for user {user_id}")
+    
+    return attachment, None
 
 def validate_pdf(attachment_info):
     """
@@ -67,7 +99,7 @@ def validate_pdf(attachment_info):
             
             if page_count == 0:
                 raise PDFValidationError("PDF appears to have no pages")
-            
+
             print(f"Successfully validated PDF: {page_count} pages, {len(file_bytes)} bytes")
             
         except Exception as e:
@@ -77,7 +109,7 @@ def validate_pdf(attachment_info):
         
     except requests.RequestException as e:
         raise PDFValidationError(f"Failed to download file: {str(e)}")
-    except PDFValidationError:
+    except ValueError:
         # Re-raise our custom exceptions
         raise
     except Exception as e:

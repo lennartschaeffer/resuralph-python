@@ -1,40 +1,9 @@
 import logging
 from aws.s3 import save_s3_resume, delete_s3_resume
 from aws.dynamo import save_db_resume, get_latest_db_resume
-from helpers.validate_pdf import validate_pdf, PDFValidationError
-from models.resume import DiscordAttachment
+from helpers.validate_pdf import validate_pdf, PDFValidationError, validate_attachment_data
 
 logger = logging.getLogger(__name__)
-
-
-def validate_attachment_data(interaction_data, user_id):
-    data = interaction_data['data']
-    
-    if 'resolved' not in data or 'attachments' not in data['resolved']:
-        logger.warning(f"No attachment found in request for user {user_id}")
-        return None, "No file attachment found. Please attach a PDF file."
-    
-    attachment_id = None
-    if 'options' in data:
-        for option in data['options']:
-            if option['name'] == 'file':
-                attachment_id = option['value']
-                break
-    
-    if not attachment_id:
-        logger.warning(f"No attachment ID found in options for user {user_id}")
-        return None, "No file attachment found in command options."
-    
-    attachments = data['resolved']['attachments']
-    if attachment_id not in attachments:
-        logger.error(f"Attachment {attachment_id} not found in resolved data for user {user_id}")
-        return None, "Attachment not found in resolved data."
-    
-    attachment_data = attachments[attachment_id]
-    attachment = DiscordAttachment.from_discord_data(attachment_data)
-    logger.info(f"Processing attachment: {attachment.filename} ({attachment.size_mb():.1f}MB) for user {user_id}")
-    
-    return attachment, None
 
 
 def handle_upload_command(interaction_data):
