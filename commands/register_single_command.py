@@ -4,13 +4,11 @@ import dotenv
 import os
 dotenv.load_dotenv()
 
-
 TOKEN = os.getenv("DEV_BOT_TOKEN")
 APPLICATION_ID = os.getenv("DEV_APPLICATION_ID")
 URL = f"https://discord.com/api/v9/applications/{APPLICATION_ID}/commands"
 
-
-with open("commands/commands.yaml", "r") as file:
+with open("commands/temp_clear_resumes.yaml", "r") as file:
     yaml_content = file.read()
 
 commands = yaml.safe_load(yaml_content)

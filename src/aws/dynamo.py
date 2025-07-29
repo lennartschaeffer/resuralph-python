@@ -170,6 +170,44 @@ class DynamoManager:
             print(f"Unexpected error in get all resumes: {e}")
             return []
 
+    def clear_all_user_resumes(self, user_id):
+        """
+        Delete all resumes for a user from DynamoDB
+        
+        Args:
+            user_id (str): Discord user ID
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            # First get all resumes for the user
+            all_resumes = self.get_all_user_resumes(user_id)
+            
+            if not all_resumes:
+                return True  # Nothing to delete
+            
+            # Delete each resume record
+            for resume in all_resumes:
+                try:
+                    self.dynamodb.delete_item(
+                        TableName=self.table_name,
+                        Key={
+                            'user_id': {'S': user_id},
+                            'resume_version': {'S': resume['resume_version']}
+                        }
+                    )
+                except ClientError as e:
+                    print(f"Error deleting resume {resume['resume_version']} for user {user_id}: {e}")
+                    return False
+            
+            print(f"Successfully deleted {len(all_resumes)} resume records for user {user_id}")
+            return True
+            
+        except Exception as e:
+            print(f"Error clearing all user resumes: {e}")
+            return False
+
 
 # Global instance
 dynamo_manager = DynamoManager()
@@ -185,3 +223,11 @@ def get_latest_db_resume(user_id):
 def update_db_resume(user_id, pdf_url, pdf_name):
     """Convenience function for updating resume version"""
     return dynamo_manager.update_db_resume(user_id, pdf_url, pdf_name)
+
+def get_all_user_resumes(user_id):
+    """Convenience function for getting all user resumes"""
+    return dynamo_manager.get_all_user_resumes(user_id)
+
+def clear_all_user_resumes(user_id):
+    """Convenience function for clearing all user resumes"""
+    return dynamo_manager.clear_all_user_resumes(user_id)

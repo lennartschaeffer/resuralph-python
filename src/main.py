@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from commands.upload import handle_upload_command
 from commands.get_latest_resume import handle_get_latest_resume_command
 from commands.update import handle_update_command
+from commands.clear_resumes import handle_clear_resumes_command
 from helpers.discord_followup import start_async_update_command
 
 # logging
@@ -59,6 +60,8 @@ def interact(raw_request):
                 response_data = start_async_update_command(raw_request)
             elif command_name == "get_resume_diff":
                 message_content = "Getting resume differences..."
+            elif command_name == "clear_resumes":
+                message_content = handle_clear_resumes_command(raw_request)
             else:
                 message_content = f"Command '{command_name}' is not implemented yet."
                 logger.warning(f"Unimplemented command: {command_name}")
