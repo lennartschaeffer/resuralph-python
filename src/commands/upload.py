@@ -80,15 +80,15 @@ def handle_upload_command(interaction_data):
         
         fields = [
             {
-                "name": "🔗 Annotation Link",
+                "name": "🔗 Resume PDF Link",
                 "value": f"[Click here to review and annotate]({annotation_link})",
                 "inline": False
             }
         ]
         
         return create_success_embed(
-            "PDF Upload Complete",
-            "Your PDF has been successfully uploaded and is ready for annotation!",
+            "Resume is Ready For Annotation!",
+            "Your PDF has been successfully uploaded and is ready for review!",
             fields
         )
         

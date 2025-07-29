@@ -181,7 +181,7 @@ def handle_update_command(interaction_data):
             logger.info(f"Update workflow completed successfully for user {user_id} (no diff requested)")
             fields = [
                 {
-                    "name": "🔗 Review Link",
+                    "name": "🔗 Resume PDF Link",
                     "value": f"[Click here to review and annotate]({annotation_link})",
                     "inline": False
                 }

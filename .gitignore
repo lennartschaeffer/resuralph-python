@@ -8,3 +8,8 @@ node_modules
 cdk.out
 .env
 venv
+
+# Python bytecode
+*.pyc
+__pycache__/
+
