@@ -18,6 +18,9 @@ export class ResuralphPythonStack extends cdk.Stack {
         architecture: lambda.Architecture.ARM_64,
         environment: {
           DISCORD_PUBLIC_KEY: process.env.DISCORD_PUBLIC_KEY || "",
+          BUCKET_REGION: process.env.BUCKET_REGION || "",
+          S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || "",
+          DYNAMODB_TABLE_NAME: process.env.DYNAMODB_TABLE_NAME || "",
         },
       }
     );
