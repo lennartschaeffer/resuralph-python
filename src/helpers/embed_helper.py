@@ -14,6 +14,22 @@ def create_success_embed(title, description, fields=None):
     
     return {"embeds": [embed]}
 
+def create_ai_review_embed(title, description, fields=None):
+    
+    embed = {
+        "color": 0x800080,  # Purple color for success
+        "title": f"🤖 {title}",
+        "description": description,
+        "footer": {
+            "text": "🤖 ResuRalph by @Lenny"
+        }
+    }
+    
+    if fields:
+        embed["fields"] = fields
+    
+    return {"embeds": [embed]}
+
 
 def create_error_embed(title, description, fields=None):
     

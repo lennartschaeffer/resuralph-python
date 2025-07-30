@@ -8,15 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def handle_get_annotations_command(interaction_data):
-    """
-    Handle the /get_annotations command
     
-    Args:
-        interaction_data (dict): Discord interaction data
-        
-    Returns:
-        str: Response message for Discord
-    """
     try:
         user_id = interaction_data.get('member', {}).get('user', {}).get('id')
         if not user_id:
@@ -63,15 +55,7 @@ def handle_get_annotations_command(interaction_data):
 
 
 def get_annotations_from_hypothesis(pdf_url):
-    """
-    Fetch annotations from Hypothesis API
     
-    Args:
-        pdf_url (str): URL of the PDF to get annotations for
-        
-    Returns:
-        dict or None: Annotations data from Hypothesis API
-    """
     try:
         api_url = f"https://api.hypothes.is/api/search?uri={quote(pdf_url)}&limit=100&order=asc"
         
@@ -93,16 +77,7 @@ def get_annotations_from_hypothesis(pdf_url):
 
 
 def format_annotations(annotations, user_id):
-    """
-    Format annotations into Discord embed format
     
-    Args:
-        annotations (dict): Annotations data from Hypothesis
-        user_id (str): Discord user ID for logging
-        
-    Returns:
-        dict: Discord response data with embeds
-    """
     try:
         # Check if there are no annotations
         if annotations.get('total', 0) == 0:

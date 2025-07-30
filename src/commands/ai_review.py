@@ -1,6 +1,6 @@
 import os
 import logging
-from helpers.embed_helper import create_error_embed, create_success_embed
+from helpers.embed_helper import create_error_embed, create_success_embed, create_ai_review_embed
 from helpers.pdf_extractor import extract_text_from_pdf_url, clean_resume_text, validate_resume_content
 from helpers.ai_resume_analyzer import analyze_resume_text, format_feedback_for_annotations
 from helpers.hypothesis_client import create_bulk_annotations, validate_annotation_data
@@ -10,15 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def handle_ai_review_command(interaction_data):
-    """
-    Handle the /ai_review command
     
-    Args:
-        interaction_data (dict): Discord interaction data
-        
-    Returns:
-        dict: Response message for Discord
-    """
     try:
         user_id = interaction_data.get('member', {}).get('user', {}).get('id')
         if not user_id:
@@ -45,24 +37,30 @@ def handle_ai_review_command(interaction_data):
                 "Annotation service is not properly configured. Please contact support. 🔧"
             )
 
-        # Get the latest resume for the user
-        latest_resume = get_latest_db_resume(user_id)
+        # Extract pdf_url from command options
+        options = interaction_data.get('data', {}).get('options', [])
+        pdf_url = None
+        for option in options:
+            if option.get('name') == 'pdf_url':
+                pdf_url = option.get('value')
+                break
         
-        # Extract the resume URL from the first (latest) result
-        latest_resume_url = latest_resume[0]['resume_url']
-        if not latest_resume:
-            logger.warning(f"No resume found for user {user_id}")
+        if not pdf_url:
+            logger.error(f"No pdf_url provided for user {user_id}")
             return create_error_embed(
-                "No Resume Found",
-                "You don't have any resumes uploaded yet. Use `/upload` to upload your resume first! 📄"
+                "Missing PDF URL",
+                "Please provide a PDF URL to get annotations."
             )
-
-        logger.info(f"Found resume for user {user_id}: {latest_resume_url}")
+        
+        # strip the hypothesis prefix if present
+        pdf_url = pdf_url.replace("https://via.hypothes.is/", "")
+        
+        logger.info(f"Getting annotations for user {user_id} with URL: {pdf_url}")
 
         # Extract text from PDF
-        resume_text = extract_text_from_pdf_url(latest_resume_url)
+        resume_text = extract_text_from_pdf_url(pdf_url)
         if not resume_text:
-            logger.error(f"Failed to extract text from PDF: {latest_resume_url}")
+            logger.error(f"Failed to extract text from PDF: {pdf_url}")
             return create_error_embed(
                 "PDF Processing Error",
                 "Unable to extract text from your resume. Please ensure it's a valid PDF with readable text. 📄"
@@ -91,8 +89,8 @@ def handle_ai_review_command(interaction_data):
         logger.info(f"AI generated {len(feedback_items)} feedback items")
 
         # Get Hypothesis URL for annotations
-        hypothesis_url = f"https://via.hypothes.is/{latest_resume_url}"
-        
+        hypothesis_url = f"https://via.hypothes.is/{pdf_url}"
+
         # Format feedback for Hypothesis annotations
         annotations = format_feedback_for_annotations(feedback_items, hypothesis_url)
         
@@ -126,22 +124,11 @@ def handle_ai_review_command(interaction_data):
                 "Unable to create annotations on your resume. Please try again later. 😔"
             )
 
-        # Create success response
-        success_message = f"✅ **AI Review Complete!**\n\n"
-        success_message += f"📊 **Analysis Summary:**\n"
-        success_message += f"• {created_count} annotations created\n"
-        
-        if failed_count > 0:
-            success_message += f"• {failed_count} failed to create\n"
-        
-        success_message += f"\n🔗 **View Your Annotated Resume:**\n{hypothesis_url}\n\n"
-        success_message += f"💡 **Tips:**\n"
-        success_message += f"• Review each annotation carefully\n"
-        success_message += f"• Look for strength indicators (💪) and improvement areas (🔧)\n"
-        success_message += f"• Use suggestions (💡) to enhance your resume\n"
+        success_message = f"\n🔗 **View Your Annotated Resume:**\n{hypothesis_url}\n\n"
+        success_message += "ResuRalph AI is experimental, so please consider the feedback as suggestions rather than definitive changes. "
 
-        embed = create_success_embed(
-            "🤖 AI Resume Review Complete!",
+        embed = create_ai_review_embed(
+            "AI Resume Review Complete!",
             success_message
         )
         
@@ -152,6 +139,9 @@ def handle_ai_review_command(interaction_data):
             "inline": False
         }]
 
+        if failed_count > 0:
+            logger.warning(f"{failed_count} annotations failed to create")
+            
         logger.info(f"Successfully completed AI review for user {user_id}: {created_count}/{total_annotations} annotations created")
         return embed
 

@@ -23,24 +23,14 @@ def get_show_diff_option(interaction_data):
 
 
 def create_resume_diff_response(old_resume_url, new_resume_url):
-    """
-    Generate a Discord embed response with resume differences
     
-    Args:
-        old_resume_url (str): URL of the previous resume
-        new_resume_url (str): URL of the new resume
-        
-    Returns:
-        dict: Discord embed response data
-    """
     try:
         diff_result = compare_text_diff(old_resume_url, new_resume_url)
         added_text = diff_result.get('added_text')
         removed_text = diff_result.get('removed_text')
         
-        # Create embed structure
         embed = {
-            "color": 0x0099ff,  # Blue color to match get_annotations
+            "color": 0x0099ff,  
             "title": "📝 Resume Changes",
             "description": "See what was added and removed from your resume:",
             "footer": {
@@ -55,7 +45,6 @@ def create_resume_diff_response(old_resume_url, new_resume_url):
             embed["color"] = 0xffff00  # Yellow color for no changes
             return {"embeds": [embed]}
         
-        # Add "Added" field
         if added_text:
             added_field = {
                 "name": "🟢 Added",
@@ -70,7 +59,6 @@ def create_resume_diff_response(old_resume_url, new_resume_url):
             }
         embed["fields"].append(added_field)
         
-        # Add "Removed" field
         if removed_text:
             removed_field = {
                 "name": "🔴 Removed",
@@ -89,9 +77,9 @@ def create_resume_diff_response(old_resume_url, new_resume_url):
         
     except Exception as e:
         logger.error(f"Error creating resume diff response: {str(e)}")
-        # Return error embed
+
         error_embed = {
-            "color": 0xff0000,  # Red color for error
+            "color": 0xff0000,  
             "title": "❌ Error",
             "description": "An error occurred while comparing the resume differences. 😔",
             "footer": {
@@ -102,15 +90,7 @@ def create_resume_diff_response(old_resume_url, new_resume_url):
 
 
 def handle_update_command(interaction_data):
-    """
-    Handle the /update command workflow
-    
-    Args:
-        interaction_data (dict): Discord interaction data
-        
-    Returns:
-        str: Response message for Discord
-    """
+   
     try:
         user_id = interaction_data['member']['user']['id']
         logger.info(f"Processing update command for user {user_id}")

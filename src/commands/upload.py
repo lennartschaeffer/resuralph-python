@@ -8,15 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def handle_upload_command(interaction_data):
-    """
-    Handle the /upload command workflow
     
-    Args:
-        interaction_data (dict): Discord interaction data
-        
-    Returns:
-        str: Response message for Discord
-    """
     try:
         user_id = interaction_data['member']['user']['id']
         logger.info(f"Processing upload command for user {user_id}")

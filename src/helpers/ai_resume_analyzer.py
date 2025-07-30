@@ -61,7 +61,7 @@ Please respond with a JSON object in this exact format:
     "feedback": [
         {{
             "selected_text": "exact text from resume being reviewed",
-            "feedback_type": "strength|improvement|suggestion|formatting",
+            "feedback_type": "improvement|formatting",
             "comment": "specific actionable feedback (keep under 200 characters)",
             "priority": "high|medium|low"
         }}
@@ -69,44 +69,32 @@ Please respond with a JSON object in this exact format:
 }}
 
 Focus on:
-1. **Content Quality**: Skills alignment, experience descriptions, quantified achievements
-2. **ATS Optimization**: Keywords, formatting, section headers
-3. **Professional Presentation**: Grammar, consistency, clarity
-4. **Structure**: Organization, flow, completeness
+1. **Experience Section and Projects Section**: These are typically the most needed areas for improvement
+2. **Content Quality**: Action statements, experience/project descriptions, quantified achievements, impacts
+3. **ATS Optimization**: Keywords, formatting, structure
+4. **Professional Presentation**: Grammar, consistency, clarity
 
 Guidelines:
 - Select specific text snippets (10-50 words) that you're commenting on
-- Provide actionable, constructive feedback
-- Mix positive reinforcement with improvement suggestions
-- Keep comments concise but valuable
+- Provide actionable, constructive feedback, and be critical
+- Only focus on improvement areas, not general praise
+- Use clear, concise language
 - Limit to 8-12 feedback items total
 """
 
     def format_feedback_for_hypothesis(self, feedback_items: List[Dict], resume_url: str) -> List[Dict]:
-        """
-        Format AI feedback for Hypothesis annotation creation
-        
-        Args:
-            feedback_items (List[Dict]): Feedback from AI analysis
-            resume_url (str): URL of the resume being annotated
-            
-        Returns:
-            List[Dict]: Formatted annotations ready for Hypothesis API
-        """
         annotations = []
         
         for item in feedback_items:
             # Map feedback type to emoji and color
             type_mapping = {
-                'strength': {'emoji': '💪', 'tag': 'strength'},
                 'improvement': {'emoji': '🔧', 'tag': 'improvement'}, 
-                'suggestion': {'emoji': '💡', 'tag': 'suggestion'},
                 'formatting': {'emoji': '📝', 'tag': 'formatting'}
             }
             
-            feedback_type = item.get('feedback_type', 'suggestion')
-            mapping = type_mapping.get(feedback_type, type_mapping['suggestion'])
-            
+            feedback_type = item.get('feedback_type', 'improvement')
+            mapping = type_mapping.get(feedback_type, type_mapping['improvement'])
+
             annotation = {
                 'uri': resume_url,
                 'target': [{
