@@ -7,3 +7,4 @@ pypdf
 requests
 python-dotenv
 PyPDF2
+openai

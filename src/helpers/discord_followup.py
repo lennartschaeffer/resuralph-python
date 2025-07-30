@@ -45,46 +45,54 @@ def send_followup_message(application_id, interaction_token, content):
         return False
 
 
-def process_update_command_async(interaction_data, application_id, interaction_token):
+def process_command_async(interaction_data, application_id, interaction_token, command_type):
     """
-    Process the update command asynchronously and send follow-up message
+    Process a command asynchronously and send follow-up message
     
     Args:
         interaction_data (dict): Original Discord interaction data
         application_id (str): Discord application ID  
         interaction_token (str): Token for follow-up messages
+        command_type (str): Type of command to process ('update' or 'ai_review')
     """
     try:
-        # Import here to avoid circular imports
-        from commands.update import handle_update_command
+        logger.info(f"Starting async {command_type} command processing")
         
-        logger.info("Starting async update command processing")
-        
-        # Process the command
-        result_message = handle_update_command(interaction_data)
+        # Import handlers dynamically to avoid circular imports
+        if command_type == 'update':
+            from commands.update import handle_update_command
+            result_message = handle_update_command(interaction_data)
+            error_context = "updating your resume"
+        elif command_type == 'ai_review':
+            from commands.ai_review import handle_ai_review_command
+            result_message = handle_ai_review_command(interaction_data)
+            error_context = "analyzing your resume"
+        else:
+            raise ValueError(f"Unknown command type: {command_type}")
         
         # Send the result as a follow-up message
         success = send_followup_message(application_id, interaction_token, result_message)
         
         if not success:
             # Try to send an error message if the main response failed
-            error_msg = "An error occurred while processing your update. Please try again."
+            error_msg = f"An error occurred while processing your {command_type}. Please try again."
             send_followup_message(application_id, interaction_token, error_msg)
         
-        logger.info("Async update command processing completed")
+        logger.info(f"Async {command_type} command processing completed")
         
     except Exception as e:
-        logger.error(f"Error in async update processing: {str(e)}")
-        error_msg = "An error occurred while updating your resume. 😔"
+        logger.error(f"Error in async {command_type} processing: {str(e)}")
+        error_msg = f"An error occurred while {error_context}. 😔"
         send_followup_message(application_id, interaction_token, error_msg)
 
 
-def start_async_update_command(interaction_data):
+def start_async_command(interaction_data, command_type):
     """
-    Start async processing of update command and return immediate deferred response
+    Start async processing of a command and return immediate deferred response
     
     Args:
         interaction_data (dict): Discord interaction data
+        command_type (str): Type of command to process ('update' or 'ai_review')
         
     Returns:
         dict: Discord deferred response
@@ -103,13 +111,13 @@ def start_async_update_command(interaction_data):
         
         # Start async processing in a separate thread
         thread = threading.Thread(
-            target=process_update_command_async,
-            args=(interaction_data, application_id, interaction_token)
+            target=process_command_async,
+            args=(interaction_data, application_id, interaction_token, command_type)
         )
         thread.daemon = True # Make sure thread exits when main program does
         thread.start() 
         
-        logger.info("Started async thread for update command processing")
+        logger.info(f"Started async thread for {command_type} command processing")
         
         # Return deferred response immediately
         return {
@@ -117,8 +125,10 @@ def start_async_update_command(interaction_data):
         }
         
     except Exception as e:
-        logger.error(f"Error starting async update command: {str(e)}")
+        logger.error(f"Error starting async {command_type} command: {str(e)}")
         return {
             "type": 4,
             "data": {"content": "An error occurred while processing your request."}
         }
+
+

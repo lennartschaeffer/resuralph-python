@@ -12,7 +12,8 @@ from commands.clear_resumes import handle_clear_resumes_command
 from commands.get_annotations import handle_get_annotations_command
 from commands.get_resume_diff import handle_get_resume_diff_command
 from commands.get_all_resumes import handle_get_all_resumes_command
-from helpers.discord_followup import start_async_update_command
+from commands.ai_review import handle_ai_review_command
+from helpers.discord_followup import start_async_command
 from helpers.embed_helper import create_success_embed, create_error_embed, create_info_embed
 
 # logging
@@ -65,7 +66,14 @@ def interact(raw_request):
         })
 
 def handle_command_routing(command_name, raw_request):
-    command_handlers = {
+    # Commands that need async processing
+    async_commands = {
+        "update": "update",
+        "ai_review": "ai_review"
+    }
+    
+    # Regular synchronous commands
+    sync_command_handlers = {
         "get_latest_resume": handle_get_latest_resume_command,
         "upload": handle_upload_command,
         "get_annotations": handle_get_annotations_command,
@@ -74,10 +82,10 @@ def handle_command_routing(command_name, raw_request):
         "get_all_resumes": handle_get_all_resumes_command,
     }
     
-    if command_name in command_handlers:
-        return command_handlers[command_name](raw_request)
-    elif command_name == "update": # update needs special handling
-        return start_async_update_command(raw_request)
+    if command_name in async_commands:
+        return start_async_command(raw_request, async_commands[command_name])
+    elif command_name in sync_command_handlers:
+        return sync_command_handlers[command_name](raw_request)
     else:
         logger.warning(f"Unimplemented command: {command_name}")
         return create_error_embed(
@@ -86,7 +94,9 @@ def handle_command_routing(command_name, raw_request):
         )
 
 def format_command_response(command_name, response_content):
-    if command_name == "update":
+    # Async commands return deferred responses that are already formatted
+    async_commands = ["update", "ai_review"]
+    if command_name in async_commands:
         return response_content # deferred response already handled in async processing
 
     if isinstance(response_content, dict) and "embeds" in response_content:
