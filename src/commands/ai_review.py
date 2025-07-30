@@ -4,6 +4,7 @@ from helpers.embed_helper import create_error_embed, create_success_embed, creat
 from helpers.pdf_extractor import extract_text_from_pdf_url, clean_resume_text, validate_resume_content
 from helpers.ai_resume_analyzer import analyze_resume_text, format_feedback_for_annotations
 from helpers.hypothesis_client import create_bulk_annotations, validate_annotation_data
+from helpers.rate_limiter import can_use_ai_review, record_ai_review_usage
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,15 @@ def handle_ai_review_command(interaction_data):
             )
 
         logger.info(f"Processing AI review request for user {user_id}")
+
+        # Check rate limiting - 1 AI review per person per day
+        can_use, time_remaining = can_use_ai_review(user_id)
+        if not can_use:
+            logger.info(f"Rate limit exceeded for user {user_id}, {time_remaining} remaining")
+            return create_error_embed(
+                "Daily Limit Reached",
+                f"You can only use AI review once per day. Please try again in {time_remaining}. 🕐\n\n"
+            )
 
         # Check for required API keys
         if not os.getenv('OPENAI_API_KEY'):
@@ -110,6 +120,9 @@ def handle_ai_review_command(interaction_data):
 
         # Create annotations via Hypothesis API
         results = create_bulk_annotations(valid_annotations)
+        
+        # Record successful AI review usage
+        record_ai_review_usage(user_id)
         
         # Check results and format response
         total_annotations = results['total']

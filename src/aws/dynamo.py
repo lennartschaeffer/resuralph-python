@@ -13,18 +13,7 @@ class DynamoManager:
         self.table_name = os.getenv('DYNAMODB_TABLE_NAME')
 
     def save_db_resume(self, pdf_url, pdf_name, user_id, version):
-        """
-        Save resume metadata to DynamoDB
         
-        Args:
-            pdf_url (str): S3 URL of the PDF
-            pdf_name (str): Original filename
-            user_id (str): Discord user ID
-            version (str): Resume version (e.g., "v1", "v2")
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
         try:
             item = {
                 'user_id': {'S': user_id},
@@ -49,15 +38,7 @@ class DynamoManager:
             return False
 
     def get_latest_db_resume(self, user_id):
-        """
-        Get the latest resume for a user
         
-        Args:
-            user_id (str): Discord user ID
-            
-        Returns:
-            list: List of resume records (empty if none found)
-        """
         try:
             response = self.dynamodb.query(
                 TableName=self.table_name,
@@ -93,17 +74,7 @@ class DynamoManager:
             return []
 
     def update_db_resume(self, user_id, pdf_url, pdf_name):
-        """
-        Update resume by incrementing version and saving new record
         
-        Args:
-            user_id (str): Discord user ID  
-            pdf_url (str): S3 URL of the new PDF
-            pdf_name (str): Original filename
-            
-        Returns:
-            str: New version number (e.g., "v2") or None if failed
-        """
         try:
             # Get latest version
             latest_resumes = self.get_latest_db_resume(user_id)
@@ -127,15 +98,7 @@ class DynamoManager:
             return None
 
     def get_all_user_resumes(self, user_id):
-        """
-        Get all resumes for a user (for testing/debugging)
         
-        Args:
-            user_id (str): Discord user ID
-            
-        Returns:
-            list: List of all resume records for the user
-        """
         try:
             response = self.dynamodb.query(
                 TableName=self.table_name,
@@ -169,15 +132,7 @@ class DynamoManager:
             return []
 
     def clear_all_user_resumes(self, user_id):
-        """
-        Delete all resumes for a user from DynamoDB
         
-        Args:
-            user_id (str): Discord user ID
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
         try:
             # First get all resumes for the user
             all_resumes = self.get_all_user_resumes(user_id)
@@ -206,6 +161,72 @@ class DynamoManager:
             print(f"Error clearing all user resumes: {e}")
             return False
 
+    def get_last_ai_review(self, user_id):
+        
+        try:
+            # Use a special key format for AI review tracking
+            ai_review_key = f"{user_id}#ai_review"
+            
+            response = self.dynamodb.query(
+                TableName=self.table_name,
+                KeyConditionExpression='user_id = :user_id',
+                ExpressionAttributeValues={
+                    ':user_id': {'S': ai_review_key}
+                },
+                ScanIndexForward=False,  # Get newest first
+                Limit=1
+            )
+            
+            items = response.get('Items', [])
+            if not items:
+                return None
+            
+            # Convert DynamoDB format to simple dict
+            item = items[0]
+            converted_item = {}
+            for key, value in item.items():
+                if 'S' in value:
+                    converted_item[key] = value['S']
+                elif 'N' in value:
+                    converted_item[key] = value['N']
+            
+            return converted_item
+            
+        except ClientError as e:
+            print(f"Error querying last AI review for user {user_id}: {e}")
+            return None
+        except Exception as e:
+            print(f"Unexpected error in get last AI review: {e}")
+            return None
+
+    def save_ai_review_attempt(self, user_id):
+       
+        try:
+            # Use a special key format for AI review tracking
+            ai_review_key = f"{user_id}#ai_review"
+            current_time = datetime.now().isoformat()
+            
+            item = {
+                'user_id': {'S': ai_review_key},
+                'resume_version': {'S': f"ai_review_{current_time}"},
+                'created_at': {'S': current_time},
+                'review_type': {'S': 'ai_review'}
+            }
+            
+            self.dynamodb.put_item(
+                TableName=self.table_name,
+                Item=item
+            )
+            
+            return True
+            
+        except ClientError as e:
+            print(f"Error saving AI review attempt for user {user_id}: {e}")
+            return False
+        except Exception as e:
+            print(f"Unexpected error saving AI review attempt: {e}")
+            return False
+
 
 # Global instance
 dynamo_manager = DynamoManager()
@@ -229,3 +250,11 @@ def get_all_user_resumes(user_id):
 def clear_all_user_resumes(user_id):
     """Convenience function for clearing all user resumes"""
     return dynamo_manager.clear_all_user_resumes(user_id)
+
+def get_last_ai_review(user_id):
+    """Convenience function for getting last AI review timestamp"""
+    return dynamo_manager.get_last_ai_review(user_id)
+
+def save_ai_review_attempt(user_id):
+    """Convenience function for saving AI review attempt"""
+    return dynamo_manager.save_ai_review_attempt(user_id)
