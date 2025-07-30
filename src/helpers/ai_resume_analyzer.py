@@ -49,7 +49,6 @@ class ResumeAnalyzer:
             return None
     
     def _create_analysis_prompt(self, resume_text: str) -> str:
-        """Create structured prompt for resume analysis"""
         return f"""
 Analyze this resume and provide specific, actionable feedback. For each piece of feedback, identify the exact text from the resume that you're commenting on.
 
@@ -61,18 +60,18 @@ Please respond with a JSON object in this exact format:
     "feedback": [
         {{
             "selected_text": "exact text from resume being reviewed",
-            "feedback_type": "improvement|formatting",
             "comment": "specific actionable feedback (keep under 200 characters)",
             "priority": "high|medium|low"
         }}
     ]
 }}
 
-Focus on:
-1. **Experience Section and Projects Section**: These are typically the most needed areas for improvement
-2. **Content Quality**: Action statements, experience/project descriptions, quantified achievements, impacts
-3. **ATS Optimization**: Keywords, formatting, structure
-4. **Professional Presentation**: Grammar, consistency, clarity
+**FOCUS ON ONLY EXPERIENCE SECTION AND PROJECTS SECTION.**
+
+Key Areas to Focus On:
+1. **Content Quality**: Action statements, Quantified achievements, Impact/Results, Specificity
+2. **ATS Optimization**: Keywords, structure
+3. **Professional Presentation**: Grammar, consistency, clarity
 
 Guidelines:
 - Select specific text snippets (10-50 words) that you're commenting on
@@ -86,14 +85,6 @@ Guidelines:
         annotations = []
         
         for item in feedback_items:
-            # Map feedback type to emoji and color
-            type_mapping = {
-                'improvement': {'emoji': '🔧', 'tag': 'improvement'}, 
-                'formatting': {'emoji': '📝', 'tag': 'formatting'}
-            }
-            
-            feedback_type = item.get('feedback_type', 'improvement')
-            mapping = type_mapping.get(feedback_type, type_mapping['improvement'])
 
             annotation = {
                 'uri': resume_url,
@@ -104,8 +95,8 @@ Guidelines:
                         'exact': item.get('selected_text', '')
                     }]
                 }],
-                'text': f"{mapping['emoji']} {item.get('comment', '')}",
-                'tags': ['ai-review', mapping['tag'], f"priority-{item.get('priority', 'medium')}"],
+                'text': f"{item.get('comment', '')}",
+                'tags': ['ai-review'],
                 'group': '__world__',
                 'permissions': {
                     'read': ['group:__world__'],

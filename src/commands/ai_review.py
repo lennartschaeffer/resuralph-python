@@ -4,7 +4,6 @@ from helpers.embed_helper import create_error_embed, create_success_embed, creat
 from helpers.pdf_extractor import extract_text_from_pdf_url, clean_resume_text, validate_resume_content
 from helpers.ai_resume_analyzer import analyze_resume_text, format_feedback_for_annotations
 from helpers.hypothesis_client import create_bulk_annotations, validate_annotation_data
-from aws.dynamo import get_latest_db_resume
 
 logger = logging.getLogger(__name__)
 
