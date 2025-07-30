@@ -8,18 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def extract_text_from_pdf_url(pdf_url):
-    """
-    Download PDF from URL and extract all text content
-    
-    Args:
-        pdf_url (str): URL to download PDF from
-        
-    Returns:
-        str: Extracted text content
-        
-    Raises:
-        Exception: If download or text extraction fails
-    """
+   
     try:
         # Download PDF
         response = requests.get(pdf_url, timeout=30)
@@ -41,19 +30,7 @@ def extract_text_from_pdf_url(pdf_url):
 
 
 def compare_text_diff(old_pdf_url, new_pdf_url):
-    """
-    Compare text content between two PDFs and return added/removed text
     
-    Args:
-        old_pdf_url (str): URL of the original PDF
-        new_pdf_url (str): URL of the updated PDF
-        
-    Returns:
-        dict: Dictionary with 'added_text' and 'removed_text' keys
-        
-    Raises:
-        Exception: If PDF download or comparison fails
-    """
     try:
         logger.info(f"Comparing PDFs: {old_pdf_url} vs {new_pdf_url}")
         
@@ -84,7 +61,7 @@ def compare_text_diff(old_pdf_url, new_pdf_url):
         removed_text = '\n'.join(removed_lines)
         
         # Truncate if too long for Discord embed
-        max_length = 1000  # Leave some buffer for Discord formatting
+        max_length = 1000  
         if len(added_text) > max_length:
             added_text = added_text[:max_length] + "...\n(truncated)"
         if len(removed_text) > max_length:

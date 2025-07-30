@@ -9,15 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def extract_text_from_pdf_url(pdf_url: str) -> Optional[str]:
-    """
-    Extract text content from a PDF at the given URL
     
-    Args:
-        pdf_url (str): URL of the PDF to extract text from
-        
-    Returns:
-        str or None: Extracted text content or None if failed
-    """
     try:
         # Download PDF content
         response = requests.get(pdf_url, timeout=30)
@@ -48,15 +40,7 @@ def extract_text_from_pdf_url(pdf_url: str) -> Optional[str]:
 
 
 def clean_resume_text(text: str) -> str:
-    """
-    Clean and format resume text for AI analysis
     
-    Args:
-        text (str): Raw text extracted from PDF
-        
-    Returns:
-        str: Cleaned text ready for AI processing
-    """
     if not text:
         return ""
     
@@ -72,15 +56,7 @@ def clean_resume_text(text: str) -> str:
 
 
 def validate_resume_content(text: str) -> bool:
-    """
-    Validate that the extracted text looks like a resume
     
-    Args:
-        text (str): Extracted text content
-        
-    Returns:
-        bool: True if content appears to be a resume
-    """
     if not text or len(text) < 100:
         return False
     

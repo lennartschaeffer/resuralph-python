@@ -38,6 +38,7 @@ class ResumeAnalyzer:
             feedback_data = json.loads(feedback_json)
             
             logger.info(f"Generated {len(feedback_data.get('feedback', []))} feedback items")
+            
             return feedback_data.get('feedback', [])
             
         except json.JSONDecodeError as e:

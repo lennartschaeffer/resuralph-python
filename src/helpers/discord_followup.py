@@ -6,23 +6,12 @@ logger = logging.getLogger(__name__)
 
 
 def send_followup_message(application_id, interaction_token, content):
-    """
-    Send a follow-up message to Discord using the interaction token
     
-    Args:
-        application_id (str): Discord application ID
-        interaction_token (str): Token from the original interaction
-        content (str or dict): Message content to send (string for plain text, dict for embeds)
-        
-    Returns:
-        bool: True if successful, False otherwise
-    """
     try:
         url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
         
-        # Check if content is an embed response or plain text
         if isinstance(content, dict) and "embeds" in content:
-            payload = content  # Use the embed structure directly
+            payload = content 
             log_message = f"Follow-up embed sent successfully: {len(content['embeds'])} embed(s)"
         else:
             payload = {
@@ -46,19 +35,10 @@ def send_followup_message(application_id, interaction_token, content):
 
 
 def process_command_async(interaction_data, application_id, interaction_token, command_type):
-    """
-    Process a command asynchronously and send follow-up message
     
-    Args:
-        interaction_data (dict): Original Discord interaction data
-        application_id (str): Discord application ID  
-        interaction_token (str): Token for follow-up messages
-        command_type (str): Type of command to process ('update' or 'ai_review')
-    """
     try:
         logger.info(f"Starting async {command_type} command processing")
         
-        # Import handlers dynamically to avoid circular imports
         if command_type == 'update':
             from commands.update import handle_update_command
             result_message = handle_update_command(interaction_data)
@@ -70,11 +50,10 @@ def process_command_async(interaction_data, application_id, interaction_token, c
         else:
             raise ValueError(f"Unknown command type: {command_type}")
         
-        # Send the result as a follow-up message
+        # result will have to be sent as a follow up message since initial response is deferred
         success = send_followup_message(application_id, interaction_token, result_message)
         
         if not success:
-            # Try to send an error message if the main response failed
             error_msg = f"An error occurred while processing your {command_type}. Please try again."
             send_followup_message(application_id, interaction_token, error_msg)
         
@@ -87,18 +66,8 @@ def process_command_async(interaction_data, application_id, interaction_token, c
 
 
 def start_async_command(interaction_data, command_type):
-    """
-    Start async processing of a command and return immediate deferred response
     
-    Args:
-        interaction_data (dict): Discord interaction data
-        command_type (str): Type of command to process ('update' or 'ai_review')
-        
-    Returns:
-        dict: Discord deferred response
-    """
     try:
-        # Extract the application ID and interaction token
         application_id = interaction_data.get('application_id')
         interaction_token = interaction_data.get('token')
         
@@ -119,7 +88,7 @@ def start_async_command(interaction_data, command_type):
         
         logger.info(f"Started async thread for {command_type} command processing")
         
-        # Return deferred response immediately
+        # send deferred response immediately 'ResuRalph is thinking...'
         return {
             "type": 5  # DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE
         }

@@ -41,22 +41,7 @@ def validate_attachment_data(interaction_data, user_id):
     return attachment, None
 
 def validate_pdf(attachment_info):
-    """
-    Validate and download a PDF attachment from Discord
     
-    Args:
-        attachment_info (dict): Discord attachment object containing:
-            - content_type: MIME type
-            - size: File size in bytes  
-            - url: Download URL
-            - filename: Original filename
-            
-    Returns:
-        bytes: PDF file content as bytes
-        
-    Raises:
-        PDFValidationError: If validation fails
-    """
     try:
         # Check content type
         if attachment_info.get('content_type') != 'application/pdf':

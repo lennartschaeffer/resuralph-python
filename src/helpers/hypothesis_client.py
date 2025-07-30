@@ -2,6 +2,7 @@ import os
 import logging
 import requests
 from typing import List, Dict, Optional
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -16,15 +17,7 @@ class HypothesisClient:
         }
     
     def create_annotation(self, annotation_data: Dict) -> Optional[Dict]:
-        """
-        Create a single annotation via Hypothesis API
         
-        Args:
-            annotation_data (Dict): Annotation data formatted for Hypothesis API
-            
-        Returns:
-            Dict or None: Created annotation data or None if failed
-        """
         try:
             url = f"{self.base_url}/annotations"
             
@@ -51,15 +44,7 @@ class HypothesisClient:
             return None
     
     def create_bulk_annotations(self, annotations: List[Dict]) -> Dict:
-        """
-        Create multiple annotations with error handling
         
-        Args:
-            annotations (List[Dict]): List of annotation data
-            
-        Returns:
-            Dict: Summary of creation results
-        """
         results = {
             'created': [],
             'failed': [],
@@ -70,7 +55,6 @@ class HypothesisClient:
             try:
                 # Add small delay between requests to avoid rate limiting
                 if i > 0:
-                    import time
                     time.sleep(0.5)
                 
                 created_annotation = self.create_annotation(annotation_data)
@@ -97,46 +81,8 @@ class HypothesisClient:
         
         return results
     
-    def delete_annotation(self, annotation_id: str) -> bool:
-        """
-        Delete an annotation by ID
-        
-        Args:
-            annotation_id (str): ID of annotation to delete
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        try:
-            url = f"{self.base_url}/annotations/{annotation_id}"
-            
-            response = requests.delete(
-                url,
-                headers=self.headers,
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                logger.info(f"Successfully deleted annotation: {annotation_id}")
-                return True
-            else:
-                logger.error(f"Failed to delete annotation {annotation_id}. Status: {response.status_code}")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Error deleting annotation {annotation_id}: {str(e)}")
-            return False
-    
     def validate_annotation_data(self, annotation_data: Dict) -> bool:
-        """
-        Validate annotation data before sending to API
         
-        Args:
-            annotation_data (Dict): Annotation data to validate
-            
-        Returns:
-            bool: True if valid, False otherwise
-        """
         required_fields = ['uri', 'target', 'text']
         
         for field in required_fields:
