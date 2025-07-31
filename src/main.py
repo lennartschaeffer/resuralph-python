@@ -13,7 +13,7 @@ from commands.get_annotations import handle_get_annotations_command
 from commands.get_resume_diff import handle_get_resume_diff_command
 from commands.get_all_resumes import handle_get_all_resumes_command
 from commands.ai_review import handle_ai_review_command
-from helpers.discord_followup import start_async_command
+from helpers.sqs_publisher import publish_command_to_queue, create_deferred_response
 from helpers.embed_helper import create_success_embed, create_error_embed, create_info_embed
 
 # logging
@@ -83,7 +83,17 @@ def handle_command_routing(command_name, raw_request):
     }
     
     if command_name in async_commands:
-        return start_async_command(raw_request, async_commands[command_name])
+        # Publish command to SQS for async processing
+        success = publish_command_to_queue(raw_request, async_commands[command_name])
+        if success:
+            logger.info(f"Command '{command_name}' queued for async processing")
+            return create_deferred_response()
+        else:
+            logger.error(f"Failed to queue command '{command_name}'")
+            return create_error_embed(
+                "Processing Error",
+                "Failed to queue your request for processing. Please try again."
+            )
     elif command_name in sync_command_handlers:
         return sync_command_handlers[command_name](raw_request)
     else:

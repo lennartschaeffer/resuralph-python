@@ -1,6 +1,5 @@
 import requests
 import logging
-import threading
 
 logger = logging.getLogger(__name__)
 
@@ -32,72 +31,3 @@ def send_followup_message(application_id, interaction_token, content):
     except Exception as e:
         logger.error(f"Failed to send follow-up message: {str(e)}")
         return False
-
-
-def process_command_async(interaction_data, application_id, interaction_token, command_type):
-    
-    try:
-        logger.info(f"Starting async {command_type} command processing")
-        
-        if command_type == 'update':
-            from commands.update import handle_update_command
-            result_message = handle_update_command(interaction_data)
-            error_context = "updating your resume"
-        elif command_type == 'ai_review':
-            from commands.ai_review import handle_ai_review_command
-            result_message = handle_ai_review_command(interaction_data)
-            error_context = "analyzing your resume"
-        else:
-            raise ValueError(f"Unknown command type: {command_type}")
-        
-        # result will have to be sent as a follow up message since initial response is deferred
-        success = send_followup_message(application_id, interaction_token, result_message)
-        
-        if not success:
-            error_msg = f"An error occurred while processing your {command_type}. Please try again."
-            send_followup_message(application_id, interaction_token, error_msg)
-        
-        logger.info(f"Async {command_type} command processing completed")
-        
-    except Exception as e:
-        logger.error(f"Error in async {command_type} processing: {str(e)}")
-        error_msg = f"An error occurred while {error_context}. 😔"
-        send_followup_message(application_id, interaction_token, error_msg)
-
-
-def start_async_command(interaction_data, command_type):
-    
-    try:
-        application_id = interaction_data.get('application_id')
-        interaction_token = interaction_data.get('token')
-        
-        if not application_id or not interaction_token:
-            logger.error("Missing application_id or token for deferred response")
-            return {
-                "type": 4,
-                "data": {"content": "An error occurred while processing your request."}
-            }
-        
-        # Start async processing in a separate thread
-        thread = threading.Thread(
-            target=process_command_async,
-            args=(interaction_data, application_id, interaction_token, command_type)
-        )
-        thread.daemon = True # Make sure thread exits when main program does
-        thread.start() 
-        
-        logger.info(f"Started async thread for {command_type} command processing")
-        
-        # send deferred response immediately 'ResuRalph is thinking...'
-        return {
-            "type": 5  # DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE
-        }
-        
-    except Exception as e:
-        logger.error(f"Error starting async {command_type} command: {str(e)}")
-        return {
-            "type": 4,
-            "data": {"content": "An error occurred while processing your request."}
-        }
-
-
