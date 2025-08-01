@@ -1,6 +1,11 @@
 import logging
 from datetime import datetime, timedelta
 from aws.dynamo import get_last_ai_review, save_ai_review_attempt
+import os
+import dotenv
+
+dotenv.load_dotenv()
+
 
 logger = logging.getLogger(__name__)
 
@@ -10,6 +15,10 @@ class RateLimiter:
     def can_use_ai_review(self, user_id):
         
         try:
+
+            if user_id == os.getenv('MY_USER_ID'): 
+                return True, None
+
             last_review = get_last_ai_review(user_id)
             
             if not last_review:

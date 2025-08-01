@@ -116,6 +116,11 @@ def format_annotations(annotations, user_id):
             targets = annotation.get('target', [])
             for target in targets:
                 selectors = target.get('selector', [])
+                if len(selectors) and selectors[0].get('exact'):
+                    resume_text = selectors[0]['exact']
+                    if len(resume_text) >= 240:
+                        resume_text = resume_text[:240] + "..."
+                    break
                 if len(selectors) > 1 and selectors[1].get('exact'):
                     resume_text = selectors[1]['exact']
                     if len(resume_text) >= 240:

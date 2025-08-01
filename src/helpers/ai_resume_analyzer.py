@@ -61,7 +61,6 @@ Please respond with a JSON object in this exact format:
         {{
             "selected_text": "exact text from resume being reviewed",
             "comment": "specific actionable feedback (keep under 200 characters)",
-            "priority": "high|medium|low"
         }}
     ]
 }}
@@ -69,14 +68,14 @@ Please respond with a JSON object in this exact format:
 **FOCUS ON ONLY EXPERIENCE SECTION AND PROJECTS SECTION.**
 
 Key Areas to Focus On:
-1. **Content Quality**: Action statements, Quantified achievements, Impact/Results, Specificity
-2. **ATS Optimization**: Keywords, structure
-3. **Professional Presentation**: Grammar, consistency, clarity
+- Action statements (accomplished x through y resulting in z)
+- Quantified achievements & Impact (don't just list what you did, but what impact did it have?) 
+- Specificity (avoid vague statements, be specific)
 
 Guidelines:
 - Select specific text snippets (10-50 words) that you're commenting on
-- Provide actionable, constructive feedback, and be critical
 - Only focus on improvement areas, not general praise
+- Be specific in your comments, avoid generalizations and be critical
 - Use clear, concise language
 - Limit to 8-12 feedback items total
 """
@@ -100,9 +99,9 @@ Guidelines:
                 'group': '__world__',
                 'permissions': {
                     'read': ['group:__world__'],
-                    'admin': ['acct:lennartschaeffer@hypothes.is'],
-                    'update': ['acct:lennartschaeffer@hypothes.is'],
-                    'delete': ['acct:lennartschaeffer@hypothes.is']
+                    'admin': ['acct:resuralph_ai@hypothes.is'],
+                    'update': ['acct:resuralph_ai@hypothes.is'],
+                    'delete': ['acct:resuralph_ai@hypothes.is']
                 }
             }
             

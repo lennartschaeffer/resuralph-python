@@ -40,6 +40,7 @@ export class ResuralphPythonStack extends cdk.Stack {
           OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
           HYPOTHESIS_API_KEY: process.env.HYPOTHESIS_API_KEY || "",
           COMMAND_QUEUE_URL: commandQueue.queueUrl,
+          MY_USER_ID: process.env.MY_USER_ID || "",
         },
       }
     );
@@ -63,6 +64,7 @@ export class ResuralphPythonStack extends cdk.Stack {
           DYNAMODB_TABLE_NAME: process.env.DYNAMODB_TABLE_NAME || "",
           OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
           HYPOTHESIS_API_KEY: process.env.HYPOTHESIS_API_KEY || "",
+          MY_USER_ID: process.env.MY_USER_ID || "",
         },
       }
     );
