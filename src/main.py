@@ -7,14 +7,13 @@ from discord_interactions import verify_key_decorator
 from dotenv import load_dotenv
 from commands.upload import handle_upload_command
 from commands.get_latest_resume import handle_get_latest_resume_command
-from commands.update import handle_update_command
 from commands.clear_resumes import handle_clear_resumes_command
 from commands.get_annotations import handle_get_annotations_command
 from commands.get_resume_diff import handle_get_resume_diff_command
 from commands.get_all_resumes import handle_get_all_resumes_command
-from commands.ai_review import handle_ai_review_command
 from helpers.sqs_publisher import publish_command_to_queue, create_deferred_response
-from helpers.embed_helper import create_success_embed, create_error_embed, create_info_embed
+from helpers.embed_helper import create_error_embed
+from helpers.local_async_processor import handle_async_command_local
 
 # logging
 logging.basicConfig(
@@ -24,6 +23,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+def is_local_environment():
+    return os.getenv("ENVIRONMENT", "DEV") != "PROD"
 
 DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
 
@@ -66,13 +68,12 @@ def interact(raw_request):
         })
 
 def handle_command_routing(command_name, raw_request):
-    # Commands that need async processing
+    
     async_commands = {
         "update": "update",
         "ai_review": "ai_review"
     }
     
-    # Regular synchronous commands
     sync_command_handlers = {
         "get_latest_resume": handle_get_latest_resume_command,
         "upload": handle_upload_command,
@@ -83,17 +84,21 @@ def handle_command_routing(command_name, raw_request):
     }
     
     if command_name in async_commands:
-        # Publish command to SQS for async processing
-        success = publish_command_to_queue(raw_request, async_commands[command_name])
-        if success:
-            logger.info(f"Command '{command_name}' queued for async processing")
-            return create_deferred_response()
+        if is_local_environment():
+            # Local development: Use background thread for async processing
+            return handle_async_command_local(raw_request, async_commands[command_name])
         else:
-            logger.error(f"Failed to queue command '{command_name}'")
-            return create_error_embed(
-                "Processing Error",
-                "Failed to queue your request for processing. Please try again."
-            )
+            # Production environment: Use SQS for async processing
+            success = publish_command_to_queue(raw_request, async_commands[command_name])
+            if success:
+                logger.info(f"Command '{command_name}' queued for async processing")
+                return create_deferred_response()
+            else:
+                logger.error(f"Failed to queue command '{command_name}'")
+                return create_error_embed(
+                    "Processing Error",
+                    "Failed to queue your request for processing. Please try again."
+                )
     elif command_name in sync_command_handlers:
         return sync_command_handlers[command_name](raw_request)
     else:

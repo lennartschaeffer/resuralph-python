@@ -32,6 +32,7 @@ export class ResuralphPythonStack extends cdk.Stack {
         timeout: cdk.Duration.seconds(10),
         architecture: lambda.Architecture.ARM_64,
         environment: {
+          ENVIRONMENT: "PROD",
           DISCORD_PUBLIC_KEY: process.env.DISCORD_PUBLIC_KEY || "",
           BUCKET_REGION: process.env.BUCKET_REGION || "",
           S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || "",
@@ -55,6 +56,7 @@ export class ResuralphPythonStack extends cdk.Stack {
         timeout: cdk.Duration.seconds(60), // 1 minute for processing
         architecture: lambda.Architecture.ARM_64,
         environment: {
+          ENVIRONMENT: "PROD",
           DISCORD_PUBLIC_KEY: process.env.DISCORD_PUBLIC_KEY || "",
           BUCKET_REGION: process.env.BUCKET_REGION || "",
           S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || "",

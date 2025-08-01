@@ -11,21 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    """
-    AWS Lambda handler for processing Discord commands from SQS messages.
-    
-    Args:
-        event: SQS event containing command processing jobs
-        context: Lambda context (unused)
-    
-    Returns:
-        Dict: Processing results
-    """
+    # AWS Lambda handler for processing Discord commands from SQS messages.
     try:
         logger.info(f"Processing {len(event['Records'])} command(s) from SQS")
         
         results = []
-        for record in event['Records']:
+        for record in event['Records']: # SQS event containing command processing jobs
             result = process_sqs_record(record)
             results.append(result)
         

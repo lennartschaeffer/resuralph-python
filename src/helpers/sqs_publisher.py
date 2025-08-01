@@ -7,16 +7,7 @@ from typing import Dict, Any
 logger = logging.getLogger(__name__)
 
 def publish_command_to_queue(interaction_data: Dict[str, Any], command_type: str) -> bool:
-    """
-    Publishes a command processing job to the SQS queue for async execution.
-    
-    Args:
-        interaction_data: The Discord interaction data
-        command_type: The type of command to process ('update', 'ai_review', etc.)
-    
-    Returns:
-        bool: True if message was published successfully, False otherwise
-    """
+    # Publish a command processing job to the SQS queue for async execution.
     try:
         queue_url = os.getenv('COMMAND_QUEUE_URL')
         if not queue_url:
@@ -25,7 +16,6 @@ def publish_command_to_queue(interaction_data: Dict[str, Any], command_type: str
             
         sqs_client = boto3.client('sqs')
         
-        # Prepare message payload
         message_body = {
             'interaction_data': interaction_data,
             'command_type': command_type,
@@ -54,12 +44,6 @@ def publish_command_to_queue(interaction_data: Dict[str, Any], command_type: str
 
 
 def create_deferred_response() -> Dict[str, Any]:
-    """
-    Creates a Discord deferred response indicating processing is happening in background.
-    
-    Returns:
-        Dict: Discord deferred response payload
-    """
     return {
-        "type": 5  # DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE
+        "type": 5  # deferred response type ie 'ResuRalph is thinking...'
     }
