@@ -13,43 +13,52 @@ In today's competitive tech job market, a standout resume is the first step towa
 
 ## **The Flow** ⏳
 
+### **Initial Upload**
 - Upload your resume as a PDF using the **/upload** command.
-- ResuRalph integrates with [**Hypothes.is**](https://hypothes.is/), generating a link for reviewers to leave **in-line** annotations on your resume.
-- Users can click on the link to view comments left by reviewers, or use the **/get_annotations** command to pull the annotations directly into Discord.
-- Once the user has made the appropriate changes, they can use the **/update** command to upload their newly updated resume.
+- ResuRalph validates the PDF, stores it in AWS S3, and saves metadata in DynamoDB.
+- The bot generates a [Hypothes.is](https://hypothes.is/) annotation link for collaborative review.
+- Share this link with reviewers who can leave **in-line** annotations directly on your resume.
 
-- When using **/update**, the optional **diff** subcommand allows users to pull the changes between their latest two resume's into discord, in a format that shows  
-  🟢Added: "Project X | React, Node, SQL..."  
-  🔴Removed: "Work Experience Y | Example Company..."
+### **Getting Feedback**
+- Use **/get_annotations** to pull annotations from reviewers directly into Discord.
+- Try **/ai_review** for AI-powered feedback and annotations (limited to once per day).
+- View all your resume versions with **/get_all_resumes**.
+- Get your latest resume link anytime with **/get_latest_resume**.
+
+### **Updating & Comparing**
+- Use **/update** to upload an improved version of your resume.
+- Enable the **show_diff** option to see changes between versions:
+  🟢**Added:** "Project X | React, Node, SQL..."
+  🔴**Removed:** "Work Experience Y | Example Company..."
+- Use **/get_resume_diff** to compare any two resume versions.
+- **/clear_resumes** permanently removes all your data from the system.
 
 ---
 
 ## **Tech Stack** 🛠️
 
-### **Backend**
+### **Backend Architecture**
+- **Python 3.13** - Core application language
+- **Flask + Mangum** - Web framework with AWS Lambda adapter
+- **Discord Interactions** - Discord bot integration
+- **Docker** - Containerized deployment
 
-- **Python**
-- **Flask**
-- **AWS (Lambda, S3, DynamoDB, CDK)**
-- **Docker**
+### **AWS Infrastructure**
+- **AWS Lambda** - Serverless compute (ARM64 architecture)
+  - Main Lambda: Discord interaction handler (10s timeout)
+  - Command Processor Lambda: Async command processing (60s timeout)
+- **Amazon S3** - PDF storage with public access
+- **DynamoDB** - Resume metadata and user data storage
+- **SQS** - Asynchronous command processing queue
+- **CDK (TypeScript)** - Infrastructure as Code
 
-### **Key Libraries & Adapters**
+### **External APIs & Services**
+- **Hypothes.is API** - PDF annotation service
+- **OpenAI API** - AI-powered resume analysis
+- **Discord API** - Bot interactions and follow-up messages
 
-- **Mangum** - ASGI adapter that enables Flask (WSGI) applications to run on AWS Lambda
-- **WsgiToAsgi** - Converts Flask's WSGI (Web Server Gateway Interface) interface to ASGI for compatibility with Mangum
-- **discord-interactions** - Handles Discord slash command verification and processing
-- **boto3** - AWS SDK for DynamoDB and S3 operations
-- **PyPDF2/pypdf** - PDF processing for resume parsing and diff generation
-
-### **Why WsgiToAsgi and Mangum?**
-
-**WsgiToAsgi** is used because Flask is a WSGI framework, but AWS Lambda with modern Python runtimes expects ASGI (Asynchronous Server Gateway Interface) applications. WsgiToAsgi bridges this gap by converting Flask's synchronous WSGI interface to the asynchronous ASGI standard.
-
-**Mangum** is specifically designed as an adapter to run ASGI applications on AWS Lambda. It handles the Lambda event/context model and translates it into HTTP requests that our Flask application can understand. This combination allows us to:
-
-1. Use familiar Flask patterns for Discord webhook handling
-2. Deploy seamlessly to AWS Lambda for serverless scalability
-3. Avoid cold start issues with proper event handling
-4. Maintain compatibility with existing Flask middleware and extensions
-
-The flow is: **Lambda Event → Mangum → ASGI → WsgiToAsgi → Flask WSGI → Discord Bot Logic**
+### **Key Libraries**
+- **boto3** - AWS SDK
+- **PyPDF2 + pypdf** - PDF processing and text extraction
+- **requests** - HTTP client for external APIs
+- **python-dotenv** - Environment variable management
