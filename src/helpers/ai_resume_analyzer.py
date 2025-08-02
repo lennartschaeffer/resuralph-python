@@ -2,11 +2,20 @@ import os
 import logging
 from openai import OpenAI
 from typing import List, Dict, Optional
-import json
 import dotenv
+from pydantic import BaseModel
 
 dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
+
+
+class FeedbackItem(BaseModel):
+    selected_text: str
+    comment: str
+
+
+class ResumeAnalysisResponse(BaseModel):
+    feedback: List[FeedbackItem]
 
 
 class ResumeAnalyzer:
@@ -26,24 +35,26 @@ class ResumeAnalyzer:
                     {"role": "system", "content": "You are an expert resume reviewer and career coach. Provide specific, actionable feedback."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.3
+                temperature=0.3,
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "resume_analysis",
+                        "schema": ResumeAnalysisResponse.model_json_schema()
+                    }
+                }
             )
             
-            feedback_json = response.choices[0].message.content
-            
-            if not feedback_json:
+            content = response.choices[0].message.content
+            if not content:
                 logger.error("AI response is empty or invalid")
                 return None
+                
+            feedback_data = ResumeAnalysisResponse.model_validate_json(content)
             
-            feedback_data = json.loads(feedback_json)
+            logger.info(f"Generated {len(feedback_data.feedback)} feedback items")
             
-            logger.info(f"Generated {len(feedback_data.get('feedback', []))} feedback items")
-            
-            return feedback_data.get('feedback', [])
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse AI response as JSON: {str(e)}")
-            return None
+            return [item.model_dump() for item in feedback_data.feedback]
         except Exception as e:
             logger.error(f"Error analyzing resume with AI: {str(e)}")
             return None

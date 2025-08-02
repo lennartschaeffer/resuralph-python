@@ -27,7 +27,7 @@ load_dotenv()
 def is_local_environment():
     return os.getenv("ENVIRONMENT", "DEV") != "PROD"
 
-DISCORD_PUBLIC_KEY = os.getenv("DISCORD_PUBLIC_KEY")
+DISCORD_PUBLIC_KEY = os.getenv("DEV_DISCORD_PUBLIC_KEY") if is_local_environment() else os.getenv("DISCORD_PUBLIC_KEY")
 
 app = Flask(__name__)
 asgi_app = WsgiToAsgi(app)
