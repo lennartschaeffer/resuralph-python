@@ -17,7 +17,10 @@ export class ResuralphPythonStack extends cdk.Stack {
       cors: [
         {
           allowedMethods: [s3.HttpMethods.GET],
-          allowedOrigins: ["http://localhost:3000"],
+          allowedOrigins: [
+            "http://localhost:3000",
+            "https://resuralph-platform.vercel.app",
+          ],
           allowedHeaders: ["*"],
         },
       ],

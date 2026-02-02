@@ -7,7 +7,6 @@ from discord_interactions import verify_key_decorator
 from dotenv import load_dotenv
 from commands.upload import handle_upload_command
 from commands.get_latest_resume import handle_get_latest_resume_command
-from commands.clear_resumes import handle_clear_resumes_command
 from commands.get_all_resumes import handle_get_all_resumes_command
 from commands.ai_review import handle_ai_review_command
 from helpers.sqs_publisher import publish_command_to_queue, create_deferred_response
@@ -30,7 +29,7 @@ DISCORD_PUBLIC_KEY = os.getenv("DEV_DISCORD_PUBLIC_KEY") if is_local_environment
 
 app = Flask(__name__)
 asgi_app = WsgiToAsgi(app)
-handler = Mangum(asgi_app)
+handler = Mangum(asgi_app, lifespan="off")
 
 @app.route("/", methods=["POST"])
 async def interactions():
@@ -70,12 +69,12 @@ def handle_command_routing(command_name, raw_request):
     
     async_commands = {
         "update": "update",
+        "clear_resumes": "clear_resumes",
     }
 
     sync_command_handlers = {
         "get_latest_resume": handle_get_latest_resume_command,
         "upload": handle_upload_command,
-        "clear_resumes": handle_clear_resumes_command,
         "get_all_resumes": handle_get_all_resumes_command,
         "ai_review": handle_ai_review_command,
     }

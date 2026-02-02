@@ -21,6 +21,9 @@ def process_async_command_thread(interaction_data, command_type, application_id,
         elif command_type == 'ai_review':
             from commands.ai_review import handle_ai_review_command
             result_message = handle_ai_review_command(interaction_data)
+        elif command_type == 'clear_resumes':
+            from commands.clear_resumes import handle_clear_resumes_command
+            result_message = handle_clear_resumes_command(interaction_data)
         else:
             logger.error(f"Unknown command type: {command_type}")
             result_message = f"Unknown command type: {command_type}"
