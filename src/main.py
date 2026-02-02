@@ -8,9 +8,8 @@ from dotenv import load_dotenv
 from commands.upload import handle_upload_command
 from commands.get_latest_resume import handle_get_latest_resume_command
 from commands.clear_resumes import handle_clear_resumes_command
-from commands.get_annotations import handle_get_annotations_command
-from commands.get_resume_diff import handle_get_resume_diff_command
 from commands.get_all_resumes import handle_get_all_resumes_command
+from commands.ai_review import handle_ai_review_command
 from helpers.sqs_publisher import publish_command_to_queue, create_deferred_response
 from helpers.embed_helper import create_error_embed
 from helpers.local_async_processor import handle_async_command_local
@@ -71,16 +70,14 @@ def handle_command_routing(command_name, raw_request):
     
     async_commands = {
         "update": "update",
-        "ai_review": "ai_review"
     }
-    
+
     sync_command_handlers = {
         "get_latest_resume": handle_get_latest_resume_command,
         "upload": handle_upload_command,
-        "get_annotations": handle_get_annotations_command,
         "clear_resumes": handle_clear_resumes_command,
-        "get_resume_diff": handle_get_resume_diff_command,
         "get_all_resumes": handle_get_all_resumes_command,
+        "ai_review": handle_ai_review_command,
     }
     
     if command_name in async_commands:
@@ -110,7 +107,7 @@ def handle_command_routing(command_name, raw_request):
 
 def format_command_response(command_name, response_content):
     # Async commands return deferred responses that are already formatted
-    async_commands = ["update", "ai_review"]
+    async_commands = ["update"]
     if command_name in async_commands:
         return response_content # deferred response already handled in async processing
 

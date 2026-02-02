@@ -1,65 +1,54 @@
+import os
 import logging
-from aws.dynamo import get_latest_db_resume
+from db.supabase_client import supabase_manager
 from helpers.embed_helper import create_error_embed, create_info_embed
 
 logger = logging.getLogger(__name__)
 
+SITE_URL = os.environ.get("SITE_URL", "")
+
 
 def handle_get_latest_resume_command(interaction_data):
-    """
-    Handle the /get_latest_resume command
-    
-    Args:
-        interaction_data (dict): Discord interaction data
-        
-    Returns:
-        str: Response message for the user
-    """
+
     try:
-        # Extract user ID from interaction data
         user_id = interaction_data.get('member', {}).get('user', {}).get('id')
-        
+
         if not user_id:
             logger.error("Could not extract user ID from interaction data")
             return create_error_embed(
                 "Processing Error",
-                "An error occurred while processing your request. 😔"
+                "An error occurred while processing your request."
             )
-        
+
         logger.info(f"Getting latest resume for user {user_id}")
-        
-        # Get the latest resume from DynamoDB
-        latest_resume = get_latest_db_resume(user_id)
-        
-        if not latest_resume or len(latest_resume) == 0:
+
+        latest_doc = supabase_manager.get_latest_document(user_id)
+
+        if not latest_doc:
             return create_info_embed(
                 "No Resume Found",
-                "It seems you haven't uploaded a resume yet. Please upload one first before requesting the latest one."
+                "It seems you haven't uploaded a resume yet. Please use `/upload` first."
             )
-        
-        # Extract the resume URL from the first (latest) result
-        latest_resume_url = latest_resume[0]['resume_url']
-        
-        # Generate Hypothes.is annotation URL
-        hypothesis_url = f"https://via.hypothes.is/{latest_resume_url}"
-        
+
+        viewer_link = f"{SITE_URL}/view/{latest_doc['id']}"
+
         fields = [
             {
-                "name": "🔗 Latest Resume",
-                "value": f"[Click here to view and annotate]({hypothesis_url})",
+                "name": "Latest Resume",
+                "value": f"[Click here to view and annotate]({viewer_link})",
                 "inline": False
             }
         ]
-        
+
         return create_info_embed(
             "Latest Resume",
-            "Here's the link to your latest resume:",
+            f"Here's the link to your latest resume (version {latest_doc['version']}):",
             fields
         )
-        
+
     except Exception as error:
         logger.error(f"Error getting latest resume: {str(error)}")
         return create_error_embed(
             "Error Retrieving Resume",
-            "An error occurred while getting your resume. 😔"
+            "An error occurred while getting your resume."
         )

@@ -93,13 +93,9 @@ def process_command(interaction_data: Dict[str, Any], command_type: str) -> Any:
         if command_type == 'update':
             from commands.update import handle_update_command
             return handle_update_command(interaction_data)
-        elif command_type == 'ai_review':
-            from commands.ai_review import handle_ai_review_command
-            return handle_ai_review_command(interaction_data)
         else:
             raise ValueError(f"Unknown command type: {command_type}")
-            
+
     except Exception as e:
         logger.error(f"Error processing {command_type} command: {str(e)}")
-        error_context = "updating your resume" if command_type == 'update' else "analyzing your resume"
-        return f"An error occurred while {error_context}. 😔"
+        return f"An error occurred while processing your request."
