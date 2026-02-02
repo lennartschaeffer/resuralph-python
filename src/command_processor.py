@@ -96,6 +96,9 @@ def process_command(interaction_data: Dict[str, Any], command_type: str) -> Any:
         elif command_type == 'clear_resumes':
             from commands.clear_resumes import handle_clear_resumes_command
             return handle_clear_resumes_command(interaction_data)
+        elif command_type == 'get_all_resumes':
+            from commands.get_all_resumes import handle_get_all_resumes_command
+            return handle_get_all_resumes_command(interaction_data)
         else:
             raise ValueError(f"Unknown command type: {command_type}")
 

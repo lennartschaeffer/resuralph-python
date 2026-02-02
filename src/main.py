@@ -70,13 +70,13 @@ def handle_command_routing(command_name, raw_request):
     async_commands = {
         "update": "update",
         "clear_resumes": "clear_resumes",
+        "get_all_resumes": "get_all_resumes",
     }
 
     sync_command_handlers = {
         "get_latest_resume": handle_get_latest_resume_command,
         "upload": handle_upload_command,
-        "get_all_resumes": handle_get_all_resumes_command,
-        "ai_review": handle_ai_review_command,
+        "ai_review": handle_ai_review_command
     }
     
     if command_name in async_commands:
@@ -106,7 +106,7 @@ def handle_command_routing(command_name, raw_request):
 
 def format_command_response(command_name, response_content):
     # Async commands return deferred responses that are already formatted
-    async_commands = ["update"]
+    async_commands = ["update", "clear_resumes", "get_all_resumes"]
     if command_name in async_commands:
         return response_content # deferred response already handled in async processing
 
