@@ -1,7 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as iam from "aws-cdk-lib/aws-iam";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import "dotenv/config";
@@ -9,6 +9,19 @@ import "dotenv/config";
 export class ResuralphPythonStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // Create private S3 bucket for resume storage
+    const resumeBucket = new s3.Bucket(this, "ResumeBucket", {
+      bucketName: "resuralph-resumes",
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      cors: [
+        {
+          allowedMethods: [s3.HttpMethods.GET],
+          allowedOrigins: ["http://localhost:3000"],
+          allowedHeaders: ["*"],
+        },
+      ],
+    });
 
     // Create SQS Queue for async command processing
     const commandQueue = new sqs.Queue(this, "CommandQueue", {
@@ -34,15 +47,14 @@ export class ResuralphPythonStack extends cdk.Stack {
         environment: {
           ENVIRONMENT: "PROD",
           DISCORD_PUBLIC_KEY: process.env.DISCORD_PUBLIC_KEY || "",
-          BUCKET_REGION: process.env.BUCKET_REGION || "",
-          S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || "",
-          DYNAMODB_TABLE_NAME: process.env.DYNAMODB_TABLE_NAME || "",
-          OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
-          HYPOTHESIS_API_KEY: process.env.HYPOTHESIS_API_KEY || "",
+          S3_BUCKET_NAME: resumeBucket.bucketName,
           COMMAND_QUEUE_URL: commandQueue.queueUrl,
           MY_USER_ID: process.env.MY_USER_ID || "",
+          SUPABASE_URL: process.env.SUPABASE_URL || "",
+          SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY || "",
+          SITE_URL: process.env.SITE_URL || "",
         },
-      }
+      },
     );
     // Create Command Processor Lambda
     const commandProcessorFunction = new lambda.DockerImageFunction(
@@ -59,31 +71,25 @@ export class ResuralphPythonStack extends cdk.Stack {
         environment: {
           ENVIRONMENT: "PROD",
           DISCORD_PUBLIC_KEY: process.env.DISCORD_PUBLIC_KEY || "",
-          BUCKET_REGION: process.env.BUCKET_REGION || "",
-          S3_BUCKET_NAME: process.env.S3_BUCKET_NAME || "",
-          DYNAMODB_TABLE_NAME: process.env.DYNAMODB_TABLE_NAME || "",
-          OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
-          HYPOTHESIS_API_KEY: process.env.HYPOTHESIS_API_KEY || "",
+          S3_BUCKET_NAME: resumeBucket.bucketName,
           MY_USER_ID: process.env.MY_USER_ID || "",
+          SUPABASE_URL: process.env.SUPABASE_URL || "",
+          SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY || "",
+          SITE_URL: process.env.SITE_URL || "",
         },
-      }
+      },
     );
 
     // Add SQS event source to command processor
     commandProcessorFunction.addEventSource(
       new lambdaEventSources.SqsEventSource(commandQueue, {
         batchSize: 1, // Process one command at a time
-      })
+      }),
     );
 
-    // Attach existing IAM policy for S3 and DynamoDB access
-    const existingPolicy = iam.ManagedPolicy.fromManagedPolicyArn(
-      this,
-      "S3DynamoDBPolicy",
-      process.env.RESURALPH_IAM_POLICY || ""
-    );
-    dockerFunction.role?.addManagedPolicy(existingPolicy);
-    commandProcessorFunction.role?.addManagedPolicy(existingPolicy);
+    // Grant S3 bucket access to both lambdas
+    resumeBucket.grantReadWrite(dockerFunction);
+    resumeBucket.grantReadWrite(commandProcessorFunction);
 
     // Grant SQS permissions to main Lambda
     commandQueue.grantSendMessages(dockerFunction);
@@ -103,6 +109,10 @@ export class ResuralphPythonStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "CommandQueueUrl", {
       value: commandQueue.queueUrl,
+    });
+
+    new cdk.CfnOutput(this, "ResumeBucketName", {
+      value: resumeBucket.bucketName,
     });
   }
 }
