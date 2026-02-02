@@ -6,44 +6,34 @@ from botocore.exceptions import ClientError
 
 class S3Manager:
     def __init__(self):
-        self.s3_client = boto3.client(
-            's3',
-            region_name=os.getenv('BUCKET_REGION')
-        )
+        self.s3_client = boto3.client('s3')
         self.bucket_name = os.getenv('S3_BUCKET_NAME')
-        self.region = os.getenv('BUCKET_REGION')
 
     def save_s3_resume(self, file_buffer, user_id):
         """
         Upload a PDF resume to S3
-        
+
         Args:
-            file_buffer (bytes): PDF file content as bytes
+            file_buffer (bytes): 
             user_id (str): Discord user ID
-            
+
         Returns:
-            dict: {'key': str, 'pdf_url': str} or None if failed
+            str: S3 key (e.g. "resumes/123456789/1706640000.pdf") or None if failed
         """
         try:
             # Generate timestamp for unique filename
             timestamp = str(int(datetime.now().timestamp() * 1000))
-            key = f"uploads/{user_id}/{timestamp}.pdf"
-            
-            # Upload file to S3
+            s3_key = f"resumes/{user_id}/{timestamp}.pdf"
+
+            # Upload file to S3 (private bucket, no public ACL)
             self.s3_client.put_object(
                 Bucket=self.bucket_name,
-                Key=key,
+                Key=s3_key,
                 Body=file_buffer,
                 ContentType='application/pdf'
             )
-            
-            # Generate public URL
-            pdf_url = f"https://{self.bucket_name}.s3.{self.region}.amazonaws.com/{key}"
-            
-            return {
-                'key': key,
-                'pdf_url': pdf_url
-            }
+
+            return s3_key
             
         except ClientError as e:
             print(f"Error uploading to S3: {e}")
@@ -88,7 +78,7 @@ class S3Manager:
         """
         try:
             # List all objects with the user's prefix
-            prefix = f"uploads/{user_id}/"
+            prefix = f"resumes/{user_id}/"
             
             response = self.s3_client.list_objects_v2(
                 Bucket=self.bucket_name,
