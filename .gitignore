@@ -12,3 +12,5 @@ venv
 # Python bytecode
 *.pyc
 __pycache__/
+
+resuralph-python/bot_compatibility_updates.md
