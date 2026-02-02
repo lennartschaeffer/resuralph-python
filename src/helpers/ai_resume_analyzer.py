@@ -91,35 +91,6 @@ Guidelines:
 - Limit to 8-12 feedback items total
 """
 
-    def format_feedback_for_hypothesis(self, feedback_items: List[Dict], resume_url: str) -> List[Dict]:
-        annotations = []
-        
-        for item in feedback_items:
-
-            annotation = {
-                'uri': resume_url,
-                'target': [{
-                    'source': resume_url,
-                    'selector': [{
-                        'type': 'TextQuoteSelector',
-                        'exact': item.get('selected_text', '')
-                    }]
-                }],
-                'text': f"{item.get('comment', '')}",
-                'tags': ['ai-review'],
-                'group': '__world__',
-                'permissions': {
-                    'read': ['group:__world__'],
-                    'admin': ['acct:resuralph_ai@hypothes.is'],
-                    'update': ['acct:resuralph_ai@hypothes.is'],
-                    'delete': ['acct:resuralph_ai@hypothes.is']
-                }
-            }
-            
-            annotations.append(annotation)
-            
-        logger.info(f"Formatted {len(annotations)} annotations for Hypothesis")
-        return annotations
 
 
 # Global instance
@@ -129,8 +100,3 @@ resume_analyzer = ResumeAnalyzer()
 def analyze_resume_text(resume_text: str) -> Optional[List[Dict]]:
     """Convenience function for analyzing resume text"""
     return resume_analyzer.analyze_resume(resume_text)
-
-
-def format_feedback_for_annotations(feedback_items: List[Dict], resume_url: str) -> List[Dict]:
-    """Convenience function for formatting feedback as annotations"""
-    return resume_analyzer.format_feedback_for_hypothesis(feedback_items, resume_url)

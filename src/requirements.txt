@@ -8,3 +8,4 @@ requests
 python-dotenv
 PyPDF2
 openai
+supabase>=2.0.0
