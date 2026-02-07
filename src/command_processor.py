@@ -43,7 +43,6 @@ def process_sqs_record(record: Dict[str, Any]) -> Dict[str, Any]:
         Dict: Processing result
     """
     try:
-        # Parse message body
         message_body = json.loads(record['body'])
         interaction_data = message_body['interaction_data']
         command_type = message_body['command_type']
@@ -52,20 +51,16 @@ def process_sqs_record(record: Dict[str, Any]) -> Dict[str, Any]:
         
         logger.info(f"Processing {command_type} command from SQS")
         
-        # Validate required data
         if not application_id or not interaction_token:
             error_msg = "Missing application_id or interaction_token in SQS message"
             logger.error(error_msg)
             return {'success': False, 'error': error_msg}
         
-        # Process the command
         result_message = process_command(interaction_data, command_type)
         
-        # Send follow-up message to Discord
         success = send_followup_message(application_id, interaction_token, result_message)
         
         if not success:
-            # Try to send error message if main result failed
             error_msg = f"An error occurred while processing your {command_type}. Please try again."
             send_followup_message(application_id, interaction_token, error_msg)
             return {'success': False, 'command_type': command_type, 'error': 'Failed to send follow-up message'}
@@ -99,6 +94,9 @@ def process_command(interaction_data: Dict[str, Any], command_type: str) -> Any:
         elif command_type == 'get_all_resumes':
             from commands.get_all_resumes import handle_get_all_resumes_command
             return handle_get_all_resumes_command(interaction_data)
+        elif command_type == 'upload':
+            from commands.upload import handle_upload_command
+            return handle_upload_command(interaction_data)
         else:
             raise ValueError(f"Unknown command type: {command_type}")
 

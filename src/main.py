@@ -13,7 +13,6 @@ from helpers.sqs_publisher import publish_command_to_queue, create_deferred_resp
 from helpers.embed_helper import create_error_embed
 from helpers.local_async_processor import handle_async_command_local
 
-# logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -67,25 +66,20 @@ def interact(raw_request):
 
 def handle_command_routing(command_name, raw_request):
     
-    async_commands = {
-        "update": "update",
-        "clear_resumes": "clear_resumes",
-        "get_all_resumes": "get_all_resumes",
-    }
-
+    async_commands = set(["update", "clear_resumes", "get_all_resumes", "upload"])
+    
     sync_command_handlers = {
         "get_latest_resume": handle_get_latest_resume_command,
-        "upload": handle_upload_command,
         "ai_review": handle_ai_review_command
     }
     
     if command_name in async_commands:
         if is_local_environment():
             # Local development: Use background thread for async processing
-            return handle_async_command_local(raw_request, async_commands[command_name])
+            return handle_async_command_local(raw_request, command_name)
         else:
             # Production environment: Use SQS for async processing
-            success = publish_command_to_queue(raw_request, async_commands[command_name])
+            success = publish_command_to_queue(raw_request, command_name)
             if success:
                 logger.info(f"Command '{command_name}' queued for async processing")
                 return create_deferred_response()
@@ -106,7 +100,7 @@ def handle_command_routing(command_name, raw_request):
 
 def format_command_response(command_name, response_content):
     # Async commands return deferred responses that are already formatted
-    async_commands = ["update", "clear_resumes", "get_all_resumes"]
+    async_commands = set(["update", "clear_resumes", "get_all_resumes", "upload"])
     if command_name in async_commands:
         return response_content # deferred response already handled in async processing
 

@@ -23,7 +23,6 @@ def publish_command_to_queue(interaction_data: Dict[str, Any], command_type: str
             'interaction_token': interaction_data.get('token')
         }
         
-        # Send message to SQS
         response = sqs_client.send_message(
             QueueUrl=queue_url,
             MessageBody=json.dumps(message_body),
